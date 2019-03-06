@@ -34,10 +34,15 @@ class CorreiosController extends Controller
 		->post();
 
 		$response = simplexml_load_string($response);
-		$retorno = $response->Servicos->cServico;
+		$response = $response->Servicos->cServico;
 
-		if (is_object($retorno) && in_array($retorno->Erro, Self::$errosPermitidos)) {
-			dd($retorno);
+		if (is_object($response) && in_array($response->Erro, Self::$errosPermitidos)) {
+			return [
+				'valor_frete' => toFloat($response->Valor),
+				'prazo_entrega_dias' => intval($response->PrazoEntrega),
+			];
+		} else {
+			return false;
 		}
 
 	}

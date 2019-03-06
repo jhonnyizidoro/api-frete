@@ -28,4 +28,19 @@ class Produto extends Model
 		->first();
 	}
 
+	public static function freteGratis(int $idLoja, int $idProduto, int $idFormaEntrega)
+	{
+		return DB::table('produtos AS p')
+		->join('produtos_fretegratis AS pf', 'pf.id_produto', 'p.id')
+		->where([
+			['p.id', $idProduto],
+			['p.reve_cod', $idLoja],
+			['p.frete_gratis', 'true'],
+			['pf.reve_cod', $idLoja],
+			['pf.id_formaentrega', $idFormaEntrega]
+		])
+		->first();
+
+	}
+
 }

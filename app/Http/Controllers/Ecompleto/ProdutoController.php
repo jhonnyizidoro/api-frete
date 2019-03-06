@@ -17,4 +17,9 @@ class ProdutoController extends Controller
 	{
 		return Produto::medidas($idLoja, $idProduto, $quantidade, $itensAdicionais);
 	}
+
+	public static function buscarFreteGratis(int $idLoja, int $idProduto, int $idFormaEntrega)
+	{
+		return Produto::freteGratis($idLoja, $idProduto, $idFormaEntrega);
+	}
 }
