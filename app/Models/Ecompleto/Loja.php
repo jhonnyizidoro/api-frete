@@ -7,19 +7,44 @@ use DB;
 
 class Loja extends Model
 {
-	public static function formasDeEntrega(int $idLoja, bool $detalhes)
+	public static function formasDeEntrega(int $idLoja)
 	{
 		$cdnServer = env('ECOMPLETO_SERVER_CDN');
-		$query = DB::table('forma_entrega AS fe')
+		return DB::table('forma_entrega AS fe')
 		->select(
 			'fe.id',
 			'fe.nome',
 			'fe.texto',
 			'fel.nome AS frete_gratis',
-			't.nome AS transportadora'
+			't.nome AS transportadora',
+			'fe.pagto_entrega',
+			'fe.id_servicorastreamento',
+			'fe.calculo_online',
+			'fe.bloquear_formapagto',
+			'fe.valor_adicional',
+			'fe.tipo_calc_peso',
+			'fe.formula_cubado',
+			'fe.cobrar_imposto',
+			'fe.label_fretegratis',
+			'fe.calculo_itens_adicionais',
+			'fe.prazo_entrega',
+			'fe.somente_emergencia',
+			'fe.exibe_prazoentrega',
+			'fe.tipo_adicional',
+			'fe.info_adicional',
+			'fe.id_cliente',
+			'fe.cache_busca',
+			'fe.valor_declarado',
+			'fe.verifica_embalagem',
+			'fe.volume_cubado_unitario',
+			'fe.apelido_marketplace',
+			'fe.codigo_interno',
+			'fe.codigo_integrador',
+			'fe.disponibilidade',
+			't.id as id_transportadora'
 		)
-		->selectRaw("concat('{$cdnServer}', t.image_icon) AS image_icon")
-		->selectRaw("concat('{$cdnServer}', t.image_ficha_entrega) AS image_ficha_entrega")
+		->selectRaw("'{$cdnServer}'||t.image_icon AS image_icon")
+		->selectRaw("'{$cdnServer}'||t.image_ficha_entrega AS image_ficha_entrega")
 		->leftJoin('transportadoras AS t', 't.id', 'fe.id_transportadora')
 		->leftJoin('forma_entrega_label AS fel', 'fel.id', 'fe.label_fretegratis')
 		->where([
@@ -27,40 +52,8 @@ class Loja extends Model
 			['fe.status', true],
 			['fe.somente_emergencia', false],
 		])
-		->orderBy('fe.id_servicorastreamento', 'DESC');
-
-		if ($detalhes) {
-			$query->addSelect(
-				'fe.pagto_entrega',
-				'fe.id_servicorastreamento',
-				'fe.calculo_online',
-				'fe.bloquear_formapagto',
-				'fe.valor_adicional',
-				'fe.tipo_calc_peso',
-				'fe.formula_cubado',
-				'fe.cobrar_imposto',
-				'fe.label_fretegratis',
-				'fe.calculo_itens_adicionais',
-				'fe.prazo_entrega',
-				'fe.somente_emergencia',
-				'fe.exibe_prazoentrega',
-				'fe.tipo_adicional',
-				'fe.info_adicional',
-				'fe.id_cliente',
-				'fe.cache_busca',
-				'fe.valor_declarado',
-				'fe.verifica_embalagem',
-				'fe.volume_cubado_unitario',
-				'fe.apelido_marketplace',
-				'fe.codigo_interno',
-				'fe.codigo_integrador',
-				'fe.disponibilidade',
-				't.id as id_transportadora'
-			);
-		}
-		
-		return $query->get();
-
+		->orderBy('fe.id_servicorastreamento', 'DESC')
+		->get();
 	}
 
 	public static function informacoesPrivadas(int $idLoja)
@@ -165,6 +158,22 @@ class Loja extends Model
 		])
 		->orderBy('e.padrao', 'DESC')
 		->get();
+	}
+
+	public static function parametro(int $idLoja, $nomeParametro)
+	{
+		return DB::table('lojas_camposadicionais_valor AS lcv')
+		->select(
+			'lcv.valor_camposadicionais AS valor_campo',
+			'lcc.apelido AS nome_campo',
+			'lcc.descricao AS descricao_campo'
+		)
+		->join('lojas_camposadicionais_chave AS lcc', 'lcv.id_camposadicionais_chave', 'lcc.id')
+		->where([
+			['lcv.id_loja', $idLoja],
+			['lcc.apelido', $nomeParametro]
+		])
+		->first();
 	}
 
 }

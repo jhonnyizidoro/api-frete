@@ -18,6 +18,21 @@ class Frete extends Model
 		->first();
 	}
 
+	public static function regraPorCep(int $idLoja, string $cep, int $idFormaDeEntrega)
+	{
+		return DB::table('frete_regra_cep')
+		->select(
+			'valor_frete'
+		)
+		->where([
+			['cep_ini', '<=', $cep],
+			['cep_fim', '>=', $cep],
+			['id_loja', $idLoja],
+			['id_formaentrega', $idFormaDeEntrega]
+		])
+		->first();
+	}
+
 	public static function regra(int $idLoja, object $faixaCep, int $idFormaDeEntrega, float $peso)
 	{
 		return DB::table('frete_regra')
@@ -39,5 +54,16 @@ class Frete extends Model
 			['id_formaentrega', $idFormaDeEntrega]
 		])
 		->first();
+	}
+
+	public static function diasAdicionaisFeriado(int $idLoja, string $dataDeEntrega)
+	{
+		return DB::table('feriado')
+		->where([
+			['id_loja', $idLoja],
+			['data', '<=', $dataDeEntrega]
+			])
+		->whereRaw('data > CURRENT_DATE')
+		->count();
 	}
 }

@@ -12,7 +12,7 @@ class LojaController extends Controller
 {
 	public static function buscarFormasEntrega(int $idLoja)
 	{
-		return Loja::formasDeEntrega($idLoja, true);
+		return Loja::formasDeEntrega($idLoja);
 	}
 
 	public static function buscarEnderecos(int $idLoja)
@@ -23,6 +23,11 @@ class LojaController extends Controller
 	public static function buscarInformacoesPrivadas(int $idLoja)
 	{
 		return Loja::informacoesPrivadas($idLoja);
+	}
+
+	public static function buscarParametroAtivo(int $idLoja, string $nomeParametro)
+	{
+		return Loja::parametro($idLoja, $nomeParametro);
 	}
 
 }

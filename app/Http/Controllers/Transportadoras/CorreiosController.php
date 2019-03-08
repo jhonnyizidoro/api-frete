@@ -4,16 +4,27 @@ namespace App\Http\Controllers\Transportadoras;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-
 use Ixudra\Curl\Facades\Curl;
+
+use App\Http\Controllers\Ecompleto\LojaController;
 
 class CorreiosController extends Controller
 {
-
-	private static $errosPermitidos = ['0', '009', '010', '011'];
+	private static $errosPermitidos = ['0', '009', '010', '011']; //Erros que retornam dos Correios mas não afetam o funcionamento da entrega
+	private static $medidasLimites = [
+		'comprimentoMaximo' => 105,
+		'larguraMaxima' => 105,
+		'alturaMaxima' => 105,
+		'comprimentoMinimo' => 16,
+		'larguraMinima' => 11,
+		'alturaMinima' => 2,
+		'somaMaximaDimensoes' => 200
+	];
 
 	public static function calcularFrete(int $idLoja, string $cepDestino, string $cepOrigem, int $idServico, object $medidas, $informacoesLoja)
 	{
+		$medidas = Self::formatarMedidasCorreios($medidas, $idLoja);
+
 		$response = Curl::to('http://ws.correios.com.br/calculador/CalcPrecoPrazo.asmx/CalcPrecoPrazo')
 		->withData([
 			'nCdEmpresa' => $informacoesLoja->correios_cdempresa,
@@ -39,11 +50,45 @@ class CorreiosController extends Controller
 		if (is_object($response) && in_array($response->Erro, Self::$errosPermitidos)) {
 			return [
 				'valor_frete' => toFloat($response->Valor),
-				'prazo_entrega_dias' => intval($response->PrazoEntrega),
+				'prazo_entrega' => intval($response->PrazoEntrega),
 			];
 		} else {
 			return false;
 		}
-
 	}
+
+	private static function formatarMedidasCorreios(object $medidas, int $idLoja)
+	{
+		//Formatando medidas mínimas
+		if ($medidas->profundidade < Self::$medidasLimites['comprimentoMinimo']) {
+			$medidas->profundidade = Self::$medidasLimites['comprimentoMinimo'];
+		}
+		if ($medidas->largura < Self::$medidasLimites['larguraMinima']) {
+			$medidas->largura = Self::$medidasLimites['larguraMinima'];
+		}
+		if ($medidas->altura < Self::$medidasLimites['alturaMinima']) {
+			$medidas->altura = Self::$medidasLimites['alturaMinima'];
+		}
+
+		//Formatando medidas máximas
+		if (LojaController::buscarParametroAtivo($idLoja, 'correios_limite_excedido')) {
+			if ($medidas->profundidade > Self::$medidasLimites['comprimentoMaximo']) {
+				$medidas->profundidade = Self::$medidasLimites['comprimentoMaximo'];
+			}
+			if ($medidas->largura > Self::$medidasLimites['larguraMaxima']) {
+				$medidas->largura = Self::$medidasLimites['larguraMaxima'];
+			}
+			if ($medidas->altura > Self::$medidasLimites['alturaMaxima']) {
+				$medidas->altura = Self::$medidasLimites['alturaMaxima'];
+			}
+			if (($medidas->profundidade + $medidas->largura + $medidas->altura) > Self::$medidasLimites['somaMaximaDimensoes']) {
+				$medidas->profundidade = floor(Self::$medidasLimites['somaMaximaDimensoes'] / 3);
+				$medidas->largura = floor(Self::$medidasLimites['somaMaximaDimensoes'] / 3);
+				$medidas->altura = floor(Self::$medidasLimites['somaMaximaDimensoes'] / 3);
+			}
+		}
+
+		return $medidas;
+	}
+
 }

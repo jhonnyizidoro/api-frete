@@ -13,13 +13,18 @@ class ProdutoController extends Controller
     /**
 	 * Retorna todos os dados relevantes para a entrega do produto
 	 */
-	public static function buscarMedidasProduto(int $idLoja, int $idProduto, int $quantidade, bool $itensAdicionais)
+	public static function buscarMedidasProduto(int $idLoja, int $idProduto, int $quantidade, object $formaDeEntrega)
 	{
-		return Produto::medidas($idLoja, $idProduto, $quantidade, $itensAdicionais);
+		return Produto::medidas($idLoja, $idProduto, $quantidade, $formaDeEntrega);
 	}
 
-	public static function buscarFreteGratis(int $idLoja, int $idProduto, int $idFormaEntrega)
+	public static function buscarFreteGratis(int $idLoja, int $idProduto, int $idFormaDeEntrega)
 	{
-		return Produto::freteGratis($idLoja, $idProduto, $idFormaEntrega);
+		return Produto::freteGratis($idLoja, $idProduto, $idFormaDeEntrega);
+	}
+
+	public static function buscarBloqueioTransportadora(int $idLoja, int $idProduto, int $idFormaDeEntrega)
+	{
+		return Produto::bloqueioTransportadora($idLoja, $idProduto, $idFormaDeEntrega);
 	}
 }
