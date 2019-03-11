@@ -11,6 +11,7 @@ use App\Http\Controllers\Ecompleto\LojaController;
 use App\Http\Controllers\Ecompleto\ProdutoController;
 use App\Http\Controllers\Ecompleto\EnderecoController;
 use App\Http\Controllers\Transportadoras\CorreiosController;
+use App\Http\Controllers\Transportadoras\JamefController;
 
 //Importação de Models
 use App\Models\Ecompleto\Frete;
@@ -45,10 +46,6 @@ class FreteController extends Controller
 			$freteGratisProduto = ProdutoController::buscarFreteGratis($idLoja, $idProduto, $formaDeEntrega->id) ? true : false;
 			$medidasDoProduto = ProdutoController::buscarMedidasProduto($idLoja, $idProduto, $quantidade, $formaDeEntrega);
 
-			//dd($medidasDoProduto);
-
-			//$medidasDoProduto->peso = 0.5;
-
 			//TODO: Criando o objeto de retorno		
 			$frete = [
 				'id' => $formaDeEntrega->id,
@@ -63,14 +60,38 @@ class FreteController extends Controller
 			];
 
 			//TODO: Calcula o valor do frete
+			$valoresFrete = NULL;
 			if ($formaDeEntrega->id_servicorastreamento === 1) {
 				$valoresFrete = Self::buscarOrcamentoFrete($formaDeEntrega->id);
-			} elseif ($formaDeEntrega->id_transportadora === 1) {
-				$valoresFrete = CorreiosController::calcularFrete($idLoja, $cep, $enderecoLoja->cep, $formaDeEntrega->id_servicorastreamento, $medidasDoProduto, $informacoesPrivadasLoja);
-			} elseif ($formaDeEntrega->id_transportadora === 9) {
-				$valoresFrete = Self::buscarRegraFretePorCep($idLoja, $cep, $formaDeEntrega);
+			} elseif ($formaDeEntrega->calculo_online) {
+				if ($formaDeEntrega->id_transportadora === 1) {
+					$valoresFrete = CorreiosController::calcularFrete($idLoja, $cep, $enderecoLoja->cep, $formaDeEntrega->id_servicorastreamento, $medidasDoProduto, $informacoesPrivadasLoja);
+				} elseif ($formaDeEntrega->id_transportadora === 9) {
+					$valoresFrete = Self::buscarRegraFretePorCep($idLoja, $cep, $formaDeEntrega);
+				} else {
+					$valoresFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidasDoProduto);
+					if ($valoresFrete) {
+						if ($formaDeEntrega->codigo_integrador === 413) {
+							$valoresFrete = JamefController::calcularFrete($idLoja, $cep, $enderecoLoja, $formaDeEntrega, $medidasDoProduto, $informacoesPrivadasLoja);
+						} elseif ($formaDeEntrega->id_transportadora === 27) {
+							//ec_jadlog
+						} elseif ($formaDeEntrega->id_transportadora === 176) {
+							//ec_tnt
+						} else {
+							//$valoresFrete['prazo_entrega'] = '';
+						}
+					}
+				}
 			} else {
-				$valoresFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidasDoProduto);
+				if ($formaDeEntrega->id_transportadora === 9) {
+
+				} elseif ($formaDeEntrega->id_transportadora === 249) {
+
+				} elseif ($formaDeEntrega->id_transportadora === 256) {
+					
+				} else {
+
+				}
 			}
 
 			//TODO: Adiciona o novo valor calculado no array de retorno
@@ -149,14 +170,11 @@ class FreteController extends Controller
 	public static function buscarRegraFrete(int $idLoja, object $faixaCep, object $formaDeEntrega, object $medidasDoProduto)
 	{
 		$regraDeFrete = Frete::regra($idLoja, $faixaCep, $formaDeEntrega->id, $medidasDoProduto->peso);
-
 		if ($regraDeFrete) {
-
 			//TODO: calculando valores adicionais
 			$regraDeFrete->valor_frete += $regraDeFrete->valor_adicional_despacho;
 			$regraDeFrete->valor_frete += $regraDeFrete->valor_adicional_percnota * $medidasDoProduto->valor_venda / 100;
 			$regraDeFrete->valor_frete += ($medidasDoProduto->peso - $regraDeFrete->peso_ini) * $regraDeFrete->valor_adicional_kg;
-
 			return [
 				'valor_frete' => floatval($regraDeFrete->valor_frete),
 				'prazo_entrega' => intval($regraDeFrete->prazo_entrega_dias),
