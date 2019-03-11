@@ -1,5 +1,7 @@
 <?php
 
+ini_set('max_execution_time', env('APP_MAX_EXECUTION_TIME', 60));
+
 return [
 
     /*

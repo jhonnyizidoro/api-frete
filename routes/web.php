@@ -1,5 +1,5 @@
 <?php
 
 Route::get('/info', function () {
-    return phpinfo();
+    die(phpinfo());
 });

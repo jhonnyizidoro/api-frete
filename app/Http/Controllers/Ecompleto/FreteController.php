@@ -40,12 +40,14 @@ class FreteController extends Controller
 			if (ProdutoController::buscarBloqueioTransportadora($idLoja, $idProduto, $formaDeEntrega->id)) {
 				continue;
 			}
-			
-			//TODO: Verifica se o produto tem alguma promoção de frete
-			$freteGratisProduto = ProdutoController::buscarFreteGratis($idLoja, $idProduto, $formaDeEntrega->id) ? true : false;
 
-			//TODO: Busca as medidas do produto para usar nos calculos
+			//TODO: Busca informações do produto
+			$freteGratisProduto = ProdutoController::buscarFreteGratis($idLoja, $idProduto, $formaDeEntrega->id) ? true : false;
 			$medidasDoProduto = ProdutoController::buscarMedidasProduto($idLoja, $idProduto, $quantidade, $formaDeEntrega);
+
+			//dd($medidasDoProduto);
+
+			//$medidasDoProduto->peso = 0.5;
 
 			//TODO: Criando o objeto de retorno		
 			$frete = [
@@ -61,22 +63,12 @@ class FreteController extends Controller
 			];
 
 			//TODO: Calcula o valor do frete
-			if ($formaDeEntrega->id_transportadora === 1) {
+			if ($formaDeEntrega->id_servicorastreamento === 1) {
+				$valoresFrete = Self::buscarOrcamentoFrete($formaDeEntrega->id);
+			} elseif ($formaDeEntrega->id_transportadora === 1) {
 				$valoresFrete = CorreiosController::calcularFrete($idLoja, $cep, $enderecoLoja->cep, $formaDeEntrega->id_servicorastreamento, $medidasDoProduto, $informacoesPrivadasLoja);
 			} elseif ($formaDeEntrega->id_transportadora === 9) {
 				$valoresFrete = Self::buscarRegraFretePorCep($idLoja, $cep, $formaDeEntrega);
-			} elseif ($formaDeEntrega->codigo_integrador === 382) {
-				//ec_frenet
-			} elseif ($formaDeEntrega->codigo_integrador === 410) {
-				//ec_braspress
-			} elseif ($formaDeEntrega->codigo_integrador === 413) {
-				//ec_jamef
-			} elseif ($formaDeEntrega->id_transportadora === 27) {
-				//ec_jadlog
-			} elseif ($formaDeEntrega->id_transportadora === 176) {
-				//ec_tnt
-			} elseif ($formaDeEntrega->id_transportadora === 27) {
-				//ec_jadlog
 			} else {
 				$valoresFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidasDoProduto);
 			}
@@ -112,6 +104,25 @@ class FreteController extends Controller
 		
 		return json($fretes, 'Sucesso ao calcular o frete', true, 200);
 		
+	}
+
+	/**
+	 * TODO: Verifica se existe algum orçamento com os dados passados. Também verifica as formas de entrega com Transportadora = COTAÇÃO DE FRETE
+	 * @return: caso encontre o orçamento retorna o valor do frete, caso não encontre retorna 0 (cotação de frete)
+	 */
+	public static function buscarOrcamentoFrete(int $idFormaDeEntrega, int $idOrcamento = 0)
+	{
+		$orcamento = Frete::orcamento($idFormaDeEntrega, $idOrcamento);
+		if ($orcamento) {
+			return [
+				'valor_frete' => $orcamento->valor_frete,
+				'prazo_entrega' => 0
+			]; 
+		}
+		return [
+			'valor_frete' => 0,
+			'prazo_entrega' => 0
+		]; 
 	}
 
 	/**
@@ -171,6 +182,6 @@ class FreteController extends Controller
 	public static function buscarCepBloqueado(int $idLoja, string $cep)
 	{
 		return Frete::cepBloqueado($idLoja, $cep);
-	}	
+	}
 }
 	

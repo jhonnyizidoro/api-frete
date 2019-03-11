@@ -18,7 +18,6 @@ class Loja extends Model
 			'fel.nome AS frete_gratis',
 			't.nome AS transportadora',
 			'fe.pagto_entrega',
-			'fe.id_servicorastreamento',
 			'fe.calculo_online',
 			'fe.bloquear_formapagto',
 			'fe.valor_adicional',
@@ -43,8 +42,9 @@ class Loja extends Model
 			'fe.disponibilidade',
 			't.id as id_transportadora'
 		)
-		->selectRaw("'{$cdnServer}'||t.image_icon AS image_icon")
-		->selectRaw("'{$cdnServer}'||t.image_ficha_entrega AS image_ficha_entrega")
+		->selectRaw('fe.id_servicorastreamento::INT')
+		->selectRaw("? || t.image_icon AS image_icon", [$cdnServer])
+		->selectRaw("? || t.image_ficha_entrega AS image_ficha_entrega", [$cdnServer])
 		->leftJoin('transportadoras AS t', 't.id', 'fe.id_transportadora')
 		->leftJoin('forma_entrega_label AS fel', 'fel.id', 'fe.label_fretegratis')
 		->where([

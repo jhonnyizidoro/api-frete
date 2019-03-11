@@ -66,4 +66,14 @@ class Frete extends Model
 		->whereRaw('data > CURRENT_DATE')
 		->count();
 	}
+
+	public static function orcamento(int $idFormaDeEntrega, int $idOrcamento)
+	{
+		return DB::table('orcamento_formaentrega')
+		->where([
+			['id_orcamento', $idOrcamento],
+			['id_formaentrega', $idFormaDeEntrega]
+		])
+		->first();
+	}
 }

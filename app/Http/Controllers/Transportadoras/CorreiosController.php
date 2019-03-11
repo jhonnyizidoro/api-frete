@@ -18,6 +18,7 @@ class CorreiosController extends Controller
 		'comprimentoMinimo' => 16,
 		'larguraMinima' => 11,
 		'alturaMinima' => 2,
+		'pesoMaximo' => 30,
 		'somaMaximaDimensoes' => 200
 	];
 
@@ -26,10 +27,11 @@ class CorreiosController extends Controller
 		$medidas = Self::formatarMedidasCorreios($medidas, $idLoja);
 
 		$response = Curl::to('http://ws.correios.com.br/calculador/CalcPrecoPrazo.asmx/CalcPrecoPrazo')
+		->withTimeout(999)
 		->withData([
 			'nCdEmpresa' => $informacoesLoja->correios_cdempresa,
 			'sDsSenha' => $informacoesLoja->correios_dssenha,
-			'nCdServico' => $idServico,
+			'nCdServico' => sprintf("%05d", $idServico),
 			'sCepOrigem' => $cepOrigem,
 			'sCepDestino' => $cepDestino,
 			'nCdFormato' => 1,
@@ -45,16 +47,15 @@ class CorreiosController extends Controller
 		->post();
 
 		$response = simplexml_load_string($response);
-		$response = $response->Servicos->cServico;
 
-		if (is_object($response) && in_array($response->Erro, Self::$errosPermitidos)) {
+		if (is_object($response) && in_array($response->Servicos->cServico->Erro, Self::$errosPermitidos)) {
+			$response = $response->Servicos->cServico;
 			return [
 				'valor_frete' => toFloat($response->Valor),
 				'prazo_entrega' => intval($response->PrazoEntrega),
 			];
-		} else {
-			return false;
 		}
+		return false;
 	}
 
 	private static function formatarMedidasCorreios(object $medidas, int $idLoja)
@@ -72,6 +73,9 @@ class CorreiosController extends Controller
 
 		//Formatando medidas máximas
 		if (LojaController::buscarParametroAtivo($idLoja, 'correios_limite_excedido')) {
+			if ($medidas->peso > Self::$medidasLimites['pesoMaximo']) {
+				$medidas->peso = Self::$medidasLimites['pesoMaximo'];
+			}
 			if ($medidas->profundidade > Self::$medidasLimites['comprimentoMaximo']) {
 				$medidas->profundidade = Self::$medidasLimites['comprimentoMaximo'];
 			}
