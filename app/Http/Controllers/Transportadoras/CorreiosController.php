@@ -10,6 +10,7 @@ use App\Http\Controllers\Ecompleto\LojaController;
 
 class CorreiosController extends Controller
 {
+	private static $curlUrl = 'http://ws.correios.com.br/calculador/CalcPrecoPrazo.asmx/CalcPrecoPrazo';
 	private static $errosPermitidos = ['0', '009', '010', '011']; //Erros que retornam dos Correios mas não afetam o funcionamento da entrega
 	private static $medidasLimites = [
 		'comprimentoMaximo' => 105,
@@ -25,9 +26,7 @@ class CorreiosController extends Controller
 	public static function calcularFrete(int $idLoja, string $cepDestino, string $cepOrigem, int $idServico, object $medidas, $informacoesLoja)
 	{
 		$medidas = Self::formatarMedidasCorreios($medidas, $idLoja);
-
-		$response = Curl::to('http://ws.correios.com.br/calculador/CalcPrecoPrazo.asmx/CalcPrecoPrazo')
-		->withTimeout(999)
+		$response = Curl::to(Self::$curlUrl)
 		->withData([
 			'nCdEmpresa' => $informacoesLoja->correios_cdempresa,
 			'sDsSenha' => $informacoesLoja->correios_dssenha,
@@ -50,8 +49,10 @@ class CorreiosController extends Controller
 
 		if (is_object($response) && in_array($response->Servicos->cServico->Erro, Self::$errosPermitidos)) {
 			$response = $response->Servicos->cServico;
+			$response->Valor = str_replace('.', '', $response->Valor);
+			$response->Valor = str_replace(",", ".", $response->Valor);
 			return [
-				'valor_frete' => toFloat($response->Valor),
+				'valor_frete' => $response->Valor,
 				'prazo_entrega' => intval($response->PrazoEntrega),
 			];
 		}

@@ -68,19 +68,14 @@ class FreteController extends Controller
 					$valoresFrete = CorreiosController::calcularFrete($idLoja, $cep, $enderecoLoja->cep, $formaDeEntrega->id_servicorastreamento, $medidasDoProduto, $informacoesPrivadasLoja);
 				} elseif ($formaDeEntrega->id_transportadora === 9) {
 					$valoresFrete = Self::buscarRegraFretePorCep($idLoja, $cep, $formaDeEntrega);
+				} elseif ($formaDeEntrega->codigo_integrador === 413) {
+					$valoresFrete = JamefController::calcularFrete($idLoja, $cep, $enderecoLoja, $formaDeEntrega, $medidasDoProduto, $informacoesPrivadasLoja);
+				} elseif ($formaDeEntrega->id_transportadora === 27) {
+					//jadlog
+				} elseif ($formaDeEntrega->id_transportadora === 176) {
+					//tnt
 				} else {
 					$valoresFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidasDoProduto);
-					if ($valoresFrete) {
-						if ($formaDeEntrega->codigo_integrador === 413) {
-							$valoresFrete = JamefController::calcularFrete($idLoja, $cep, $enderecoLoja, $formaDeEntrega, $medidasDoProduto, $informacoesPrivadasLoja);
-						} elseif ($formaDeEntrega->id_transportadora === 27) {
-							//ec_jadlog
-						} elseif ($formaDeEntrega->id_transportadora === 176) {
-							//ec_tnt
-						} else {
-							//$valoresFrete['prazo_entrega'] = '';
-						}
-					}
 				}
 			} else {
 				if ($formaDeEntrega->id_transportadora === 9) {
@@ -155,7 +150,7 @@ class FreteController extends Controller
 		$regraDeFrete = Frete::regraPorCep($idLoja, $cep, $formaDeEntrega->id);
 		if ($regraDeFrete) {
 			return [
-				'valor_frete' => floatval($regraDeFrete->valor_frete),
+				'valor_frete' => $regraDeFrete->valor_frete,
 				'prazo_entrega' => $formaDeEntrega->prazo_entrega
 			]; 
 		}
@@ -176,7 +171,7 @@ class FreteController extends Controller
 			$regraDeFrete->valor_frete += $regraDeFrete->valor_adicional_percnota * $medidasDoProduto->valor_venda / 100;
 			$regraDeFrete->valor_frete += ($medidasDoProduto->peso - $regraDeFrete->peso_ini) * $regraDeFrete->valor_adicional_kg;
 			return [
-				'valor_frete' => floatval($regraDeFrete->valor_frete),
+				'valor_frete' => $regraDeFrete->valor_frete,
 				'prazo_entrega' => intval($regraDeFrete->prazo_entrega_dias),
 			];
 		}
@@ -202,4 +197,3 @@ class FreteController extends Controller
 		return Frete::cepBloqueado($idLoja, $cep);
 	}
 }
-	
