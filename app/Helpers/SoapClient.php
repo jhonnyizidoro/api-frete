@@ -3,6 +3,8 @@
 namespace app\Helpers;
 
 use SoapClient as PHPSoap;
+use SoapFault;
+use SimpleXMLElement;
 
 class SoapClient
 {
@@ -36,7 +38,11 @@ class SoapClient
 	public function call(string $functionName)
 	{
 		$client = new PHPSoap(Self::$wsdl, Self::$options);
-		return $client->__soapCall($functionName, Self::$parameters, Self::$location);
+		try {
+			return $client->__soapCall($functionName, Self::$parameters, Self::$location);
+		} catch (SoapFault $e) {
+			return false;
+		}
 	}
 
 	//OPTIONS
@@ -54,6 +60,15 @@ class SoapClient
 			Self::$options = array_merge(Self::$options, ['exception' => 1]);
 		}
 		return $this;
+	}
+
+	//FORMATTERS
+	public static function parseXML($xml)
+	{
+		$object = new SimpleXMLElement($xml);
+		$object = json_encode($object);
+		$object = json_decode($object);
+		return $object;
 	}
 
 }

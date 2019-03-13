@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Ecompleto;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 
@@ -12,6 +11,7 @@ use App\Http\Controllers\Ecompleto\ProdutoController;
 use App\Http\Controllers\Ecompleto\EnderecoController;
 use App\Http\Controllers\Transportadoras\CorreiosController;
 use App\Http\Controllers\Transportadoras\JamefController;
+use App\Http\Controllers\Transportadoras\JadlogController;
 
 //Importação de Models
 use App\Models\Ecompleto\Frete;
@@ -69,9 +69,9 @@ class FreteController extends Controller
 				} elseif ($formaDeEntrega->id_transportadora === 9) {
 					$valoresFrete = Self::buscarRegraFretePorCep($idLoja, $cep, $formaDeEntrega);
 				} elseif ($formaDeEntrega->codigo_integrador === 413) {
-					$valoresFrete = JamefController::calcularFrete($idLoja, $cep, $enderecoLoja, $formaDeEntrega, $medidasDoProduto, $informacoesPrivadasLoja);
+					$valoresFrete = JamefController::calcularFrete($cep, $enderecoLoja, $formaDeEntrega, $medidasDoProduto, $informacoesPrivadasLoja);
 				} elseif ($formaDeEntrega->id_transportadora === 27) {
-					//jadlog
+					$valoresFrete = JadlogController::calcularFrete($idLoja, $cep, $medidasDoProduto, $formaDeEntrega, $informacoesPrivadasLoja);
 				} elseif ($formaDeEntrega->id_transportadora === 176) {
 					//tnt
 				} else {

@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers\Transportadoras;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Helpers\SoapClient;
-use SoapClient as PHPSoap;
 use Carbon\Carbon;
 
 class JamefController extends Controller
@@ -13,7 +11,7 @@ class JamefController extends Controller
 
 	private static $soapUrl = 'http://www.jamef.com.br/webservice/JAMW0520.apw?WSDL';
 
-	public static function calcularFrete(int $idLoja, string $cep, object $enderecoLoja, object $formaDeEntrega, object $medidasDoProduto, object $informacoesPrivadasLoja)
+	public static function calcularFrete(string $cep, object $enderecoLoja, object $formaDeEntrega, object $medidasDoProduto, object $informacoesPrivadasLoja)
 	{
 		$response = SoapClient::wsdl(Self::$soapUrl)
 		->parameters([
@@ -25,7 +23,7 @@ class JamefController extends Controller
 				'SEGPROD' => '000004',
 				'QTDVOL' => 1,
 				'PESO' => $medidasDoProduto->peso,
-				'VALMER' => $medidasDoProduto->valor_venda,
+				'VALMER' => $medidasDoProduto->valor_venda_nota,
 				'METRO3' => $medidasDoProduto->peso_cubico,
 				'CNPJDES' => $informacoesPrivadasLoja->cnpj,
 				'CEPDES' => str_replace('-', '', $cep),
@@ -33,7 +31,7 @@ class JamefController extends Controller
 		])
 		->call('JAMW0520_05');
 
-		if (strpos($response->JAMW0520_05RESULT->MSGERRO, 'Ok') !== false) {
+		if ($response && strpos($response->JAMW0520_05RESULT->MSGERRO, 'Ok') !== false) {
 			$prazoDeEntrega = Self::calcularPrazoDeEntrega($cep, $enderecoLoja, $informacoesPrivadasLoja->cnpj);
 			if ($prazoDeEntrega) {
 				return [

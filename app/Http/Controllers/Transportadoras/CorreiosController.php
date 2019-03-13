@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Transportadoras;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Ixudra\Curl\Facades\Curl;
+use App\Helpers\SoapClient;
 
 use App\Http\Controllers\Ecompleto\LojaController;
 
@@ -45,14 +45,12 @@ class CorreiosController extends Controller
 		])
 		->post();
 
-		$response = simplexml_load_string($response);
+		$response = SoapClient::parseXML($response);
 
 		if (is_object($response) && in_array($response->Servicos->cServico->Erro, Self::$errosPermitidos)) {
 			$response = $response->Servicos->cServico;
-			$response->Valor = str_replace('.', '', $response->Valor);
-			$response->Valor = str_replace(",", ".", $response->Valor);
 			return [
-				'valor_frete' => $response->Valor,
+				'valor_frete' => standardizeFloat($response->Valor),
 				'prazo_entrega' => intval($response->PrazoEntrega),
 			];
 		}

@@ -47,3 +47,18 @@ if (!function_exists('removerAcentos'))
 		return $string;
 	}
 }
+
+/**
+* @param value: valor em string ou float que será convertido
+* TODO: recebe um valor no formato local e retorna no formato padrão. Exemplo: '1.000,00' e retorna 1000.00
+*/
+if (!function_exists('standardizeFloat'))
+{
+	function standardizeFloat($value)
+	{
+		$value = strval($value);
+		$value = str_replace('.', '', $value);
+		$value = str_replace(',', '.', $value);
+		return floatval($value);
+	}
+}

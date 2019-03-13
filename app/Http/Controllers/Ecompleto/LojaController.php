@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Ecompleto;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 //Importação de Models

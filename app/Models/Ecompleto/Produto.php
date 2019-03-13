@@ -19,7 +19,8 @@ class Produto extends Model
 			'p.largura',
 			'p.profundidade',
 			'p.altura',
-			'p.valor_venda'
+			'p.valor_venda',
+			'p.valor_venda AS valor_venda_nota'
 		)
 		->where([
 			['p.id', $idProduto],
