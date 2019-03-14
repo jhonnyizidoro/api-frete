@@ -160,19 +160,15 @@ class Loja extends Model
 		->get();
 	}
 
-	public static function parametro(int $idLoja, $nomeParametro)
+	public static function parametro(int $idLoja, string $nomeParametro)
 	{
 		return DB::table('lojas_camposadicionais_valor AS lcv')
-		->select(
-			'lcv.valor_camposadicionais AS valor_campo',
-			'lcc.apelido AS nome_campo',
-			'lcc.descricao AS descricao_campo'
-		)
 		->join('lojas_camposadicionais_chave AS lcc', 'lcv.id_camposadicionais_chave', 'lcc.id')
 		->where([
 			['lcv.id_loja', $idLoja],
 			['lcc.apelido', $nomeParametro]
 		])
+		->pluck('lcv.valor_camposadicionais')
 		->first();
 	}
 

@@ -8,12 +8,12 @@ use Carbon\Carbon;
 
 class JamefController extends Controller
 {
-
 	private static $soapUrl = 'http://www.jamef.com.br/webservice/JAMW0520.apw?WSDL';
 
 	public static function calcularFrete(string $cep, object $enderecoLoja, object $formaDeEntrega, object $medidasDoProduto, object $informacoesPrivadasLoja)
 	{
 		$response = SoapClient::wsdl(Self::$soapUrl)
+		->timeout(5)
 		->parameters([
 			'JAMW0520_05' => [
 				'TIPTRA' => '1',

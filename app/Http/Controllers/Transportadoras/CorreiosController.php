@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Ixudra\Curl\Facades\Curl;
 use App\Helpers\SoapClient;
 
+//Importação dos controllers
 use App\Http\Controllers\Ecompleto\LojaController;
 
 class CorreiosController extends Controller
@@ -27,6 +28,7 @@ class CorreiosController extends Controller
 	{
 		$medidas = Self::formatarMedidasCorreios($medidas, $idLoja);
 		$response = Curl::to(Self::$curlUrl)
+		->withTimeout(5)
 		->withData([
 			'nCdEmpresa' => $informacoesLoja->correios_cdempresa,
 			'sDsSenha' => $informacoesLoja->correios_dssenha,
@@ -45,7 +47,7 @@ class CorreiosController extends Controller
 		])
 		->post();
 
-		$response = SoapClient::parseXML($response);
+		$response = simplexml_load_string($response);
 
 		if (is_object($response) && in_array($response->Servicos->cServico->Erro, Self::$errosPermitidos)) {
 			$response = $response->Servicos->cServico;
@@ -71,7 +73,7 @@ class CorreiosController extends Controller
 		}
 
 		//Formatando medidas máximas
-		if (LojaController::buscarParametroAtivo($idLoja, 'correios_limite_excedido')) {
+		if (LojaController::buscarParametro($idLoja, 'correios_limite_excedido')) {
 			if ($medidas->peso > Self::$medidasLimites['pesoMaximo']) {
 				$medidas->peso = Self::$medidasLimites['pesoMaximo'];
 			}

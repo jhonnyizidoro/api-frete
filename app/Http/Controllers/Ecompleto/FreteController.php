@@ -12,6 +12,7 @@ use App\Http\Controllers\Ecompleto\EnderecoController;
 use App\Http\Controllers\Transportadoras\CorreiosController;
 use App\Http\Controllers\Transportadoras\JamefController;
 use App\Http\Controllers\Transportadoras\JadlogController;
+use App\Http\Controllers\Transportadoras\TNTController;
 
 //Importação de Models
 use App\Models\Ecompleto\Frete;
@@ -73,7 +74,7 @@ class FreteController extends Controller
 				} elseif ($formaDeEntrega->id_transportadora === 27) {
 					$valoresFrete = JadlogController::calcularFrete($idLoja, $cep, $medidasDoProduto, $formaDeEntrega, $informacoesPrivadasLoja);
 				} elseif ($formaDeEntrega->id_transportadora === 176) {
-					//tnt
+					$valoresFrete = TNTController::calcularFrete($idLoja, $cep, $enderecoLoja, $medidasDoProduto, $formaDeEntrega, $informacoesPrivadasLoja);
 				} else {
 					$valoresFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidasDoProduto);
 				}

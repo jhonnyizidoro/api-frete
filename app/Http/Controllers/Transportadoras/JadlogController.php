@@ -5,34 +5,36 @@ namespace App\Http\Controllers\Transportadoras;
 use App\Http\Controllers\Controller;
 use App\Helpers\SoapClient;
 
+//Importação dos models
 use App\Models\Transportadoras\Jadlog;
 
 class JadlogController extends Controller
 {
+	private static $soapUrl = 'http://www.jadlog.com.br:8080/JadlogEdiWs/services/ValorFreteBean?wsdl';
+	
 	public static function calcularFrete(int $idLoja, string $cep, object $medidasDoProduto, object $formaDeEntrega, object $informacoesPrivadasLoja)
 	{
 		$ws = Self::buscarWs($idLoja, $formaDeEntrega->id_servicorastreamento);
 		if ($ws) {
-			$response = SoapClient::wsdl('http://www.jadlog.com.br:8080/JadlogEdiWs/services/ValorFreteBean?wsdl')
-			->parameters([
-				[
-					'vModalidade' => $ws->modalidade,
-					'Password' => $ws->senha,
-					'vSeguro' => $ws->tipo_seguro,
-					'vVlDec' => $medidasDoProduto->valor_venda_nota,
-					'vVlColeta' => $ws->valor_coleta,
-					'vCepOrig' => str_replace("-", "", $ws->cep_origem),
-					'vCepDest' => str_replace("-", "", $cep),
-					'vPeso' => $medidasDoProduto->peso,
-					'vFrap' => 'N',
-					'vEntrega' => 'D',
-					'vCnpj' => $informacoesPrivadasLoja->cnpj
-				]
-			])
+			$response = SoapClient::wsdl(Self::$soapUrl)
+			->timeout(5)
+			->parameters([[
+				'vModalidade' => $ws->modalidade,
+				'Password' => $ws->senha,
+				'vSeguro' => $ws->tipo_seguro,
+				'vVlDec' => $medidasDoProduto->valor_venda_nota,
+				'vVlColeta' => $ws->valor_coleta,
+				'vCepOrig' => str_replace("-", "", $ws->cep_origem),
+				'vCepDest' => str_replace("-", "", $cep),
+				'vPeso' => $medidasDoProduto->peso,
+				'vFrap' => 'N',
+				'vEntrega' => 'D',
+				'vCnpj' => $informacoesPrivadasLoja->cnpj
+			]])
 			->call('valorar');
 			
 			if ($response) {
-				$response = SoapClient::parseXML($response->valorarReturn);
+				$response = simplexml_load_string($response->valorarReturn);
 				$valorFrete = standardizeFloat($response->Jadlog_Valor_Frete->Retorno);
 				if ($valorFrete >= -2) {
 					return [

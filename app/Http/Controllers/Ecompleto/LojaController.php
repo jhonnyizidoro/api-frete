@@ -24,7 +24,7 @@ class LojaController extends Controller
 		return Loja::informacoesPrivadas($idLoja);
 	}
 
-	public static function buscarParametroAtivo(int $idLoja, string $nomeParametro)
+	public static function buscarParametro(int $idLoja, string $nomeParametro)
 	{
 		return Loja::parametro($idLoja, $nomeParametro);
 	}
