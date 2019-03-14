@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Transportadoras;
 
 use App\Http\Controllers\Controller;
 use App\Helpers\SoapClient;
+use App\Helpers\XML;
 
 //Importação dos models
 use App\Models\Transportadoras\Jadlog;
@@ -34,7 +35,7 @@ class JadlogController extends Controller
 			->call('valorar');
 			
 			if ($response) {
-				$response = simplexml_load_string($response->valorarReturn);
+				$response = XML::parse($response->valorarReturn)->toObject();
 				$valorFrete = standardizeFloat($response->Jadlog_Valor_Frete->Retorno);
 				if ($valorFrete >= -2) {
 					return [

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Transportadoras;
 use App\Http\Controllers\Controller;
 use Ixudra\Curl\Facades\Curl;
 use App\Helpers\SoapClient;
+use App\Helpers\XML;
 
 //Importação dos controllers
 use App\Http\Controllers\Ecompleto\LojaController;
@@ -47,8 +48,8 @@ class CorreiosController extends Controller
 		])
 		->post();
 
-		$response = simplexml_load_string($response);
-
+		$response = XML::parse($response)->toObject();
+		
 		if (is_object($response) && in_array($response->Servicos->cServico->Erro, Self::$errosPermitidos)) {
 			$response = $response->Servicos->cServico;
 			return [

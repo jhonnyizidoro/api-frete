@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Transportadoras;
 
 use App\Http\Controllers\Controller;
 use App\Helpers\SoapClient;
+use App\Helpers\XML;
 use Ixudra\Curl\Facades\Curl;
 use Spatie\ArrayToXml\ArrayToXml;
 
@@ -46,6 +47,7 @@ class TNTController extends Controller
 		$cep = str_replace("-", "", $cep);
 		$enderecoLoja->cep = str_replace("-", "", $enderecoLoja->cep);
 
+		//TODO: gerando o XML de envio
 		$xmlArray = [
 			'soapenv:Header' => '',
 			'soapenv:Body' => [
@@ -81,6 +83,7 @@ class TNTController extends Controller
 			]
 		]);
 
+		//TODO: Enviando o XML
 		$response = Curl::to(Self::$curlUrl)
 		->withTimeout(5)
 		->withHeaders([
@@ -94,8 +97,15 @@ class TNTController extends Controller
 		->withData($xml)
 		->post();
 
-		$response = simplexml_load_string($response);
-		$response = $response->children('soap', true)->Body->children('ns1', true)->calculaFreteResponse->out->children();
-		dd($response);
+		//TODO: retornando a resposta
+		$response = XML::parse($response)->toObject();
+		$response = $response->Body->calculaFreteResponse->out;
+		if (!$response->errorList) {
+			return [
+				'valor_frete' => $response->vlTotalFrete,
+				'prazo_entrega' => $response->prazoEntrega
+			];
+		}
+		return false;
 	}
 }
