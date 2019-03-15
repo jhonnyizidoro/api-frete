@@ -44,10 +44,11 @@ class FreteController extends Controller
 			}
 
 			//TODO: Busca informações do produto
-			$freteGratisProduto = ProdutoController::buscarFreteGratis($idLoja, $idProduto, $formaDeEntrega->id) ? true : false;
+			$freteGratisProduto = ProdutoController::buscarFreteGratis($idLoja, $idProduto, $formaDeEntrega->id);
+			$promocaoFreteProduto = ProdutoController::buscarPromocaoFrete($idLoja, $idProduto, $quantidade, $formaDeEntrega->id, $faixaCep);
 			$medidasDoProduto = ProdutoController::buscarMedidasProduto($idLoja, $idProduto, $quantidade, $formaDeEntrega);
 
-			//TODO: Criando o objeto de retorno		
+			//TODO: Criando o objeto de retorno
 			$frete = [
 				'id' => $formaDeEntrega->id,
 				'nome' => $formaDeEntrega->nome,
@@ -109,6 +110,11 @@ class FreteController extends Controller
 				$frete['valor_frete'] = $informacoesPrivadasLoja->frete_minimo;
 			}
 			$frete['valor_frete_original'] = $frete['valor_frete'];
+
+			//TODO: alterando o valor do frete com bas nas promoções
+			if ($promocaoFreteProduto) {
+				$frete['valor_frete'] -= $frete['valor_frete'] * $promocaoFreteProduto->desconto / 100;
+			}
 
 			array_push($fretes, $frete);
 

@@ -7,44 +7,22 @@ use DB;
 
 class Produto extends Model
 {
-    /**
-	 * Retorna todos os dados relevantes para a entrega do produto
-	 */
-	public static function medidas(int $idLoja, int $idProduto, int $quantidade, object $formaDeEntrega)
+	public static function medidas(int $idLoja, int $idProduto)
 	{
-		$medidas = DB::table('produtos AS p')
+		return DB::table('produtos AS p')
 		->select(
 			'p.id',
 			'p.peso',
 			'p.largura',
 			'p.profundidade',
 			'p.altura',
-			'p.valor_venda',
-			'p.valor_venda AS valor_venda_nota'
+			'p.valor_venda'
 		)
 		->where([
 			['p.id', $idProduto],
 			['p.reve_cod', $idLoja],
 		])
 		->first();
-
-		//Formatando medidas
-		//TODO: Ao cadastrar uma forma de entrega é possível marcar um checkbox que leva em conta a $quantidade de produtos ao calcular o frete
-		if ($formaDeEntrega->calculo_itens_adicionais) {
-			$medidas->peso = round($medidas->peso * $quantidade, 4);
-			$medidas->altura = round($medidas->altura * $quantidade, 4);
-			$medidas->peso_cubico = round($medidas->largura * $medidas->altura * $medidas->profundidade * $quantidade * $formaDeEntrega->formula_cubado / 1000000, 4);
-			$medidas->volume = round($medidas->largura * $medidas->altura * $medidas->profundidade * $quantidade, 4);
-		} else {
-			$medidas->peso_cubico = round($medidas->largura * $medidas->altura * $medidas->profundidade * $formaDeEntrega->formula_cubado / 1000000, 4);
-			$medidas->volume = round($medidas->largura * $medidas->altura * $medidas->profundidade, 4);
-		}
-		//TODO: Ao cadastrar uma forma de entrega é possível marcar um checkbox que envia o valor do produto para os calculos dos correios
-		if (!$formaDeEntrega->valor_declarado) {
-			$medidas->valor_venda = 0;
-		}
-
-		return $medidas;
 	}
 
 	public static function freteGratis(int $idLoja, int $idProduto, int $idFormaDeEntrega)
@@ -58,7 +36,7 @@ class Produto extends Model
 			['pf.reve_cod', $idLoja],
 			['pf.id_formaentrega', $idFormaDeEntrega]
 		])
-		->first();
+		->exists();
 	}
 
 	public static function bloqueioTransportadora(int $idLoja, int $idProduto, int $idFormaDeEntrega)
@@ -69,6 +47,39 @@ class Produto extends Model
 			['id_formaentrega', $idFormaDeEntrega],
 			['id_loja', $idLoja]
 		])
+		->first();
+	}
+
+	public static function promocaoFrete(int $idLoja, int $idProduto, int $quantidade, int $idFormaDeEntrega, object $faixaCep)
+	{
+		return  DB::table('produtos AS p')
+		->select('fr.*')
+		->leftJoin('produtos_multicategoria AS pm', 'pm.id_produto', 'p.id')
+		->leftJoin('frete_regrapromocao_categorias AS frc', 'frc.id_cateprod', 'p.id_categoria')
+		->leftJoin('frete_regrapromocao_fabricante AS frf', function($join) {
+			$join->on('frf.id_fabricante', 'p.id_fabricante');
+			$join->orOn('frf.id_fabricante', 'pm.id_categoria_1');
+			$join->orOn('frf.id_fabricante', 'pm.id_categoria_2');
+			$join->orOn('frf.id_fabricante', 'pm.id_categoria_3');
+			$join->orOn('frf.id_fabricante', 'pm.id_categoria_4');
+			$join->orOn('frf.id_fabricante', 'pm.id_categoria_5');
+		})
+		->join('frete_regrapromocao AS fr', function($join) {
+			$join->on('fr.id', 'frc.id_regrapromocao');
+			$join->orOn('fr.id', 'frf.id_regrapromocao');
+		})
+		->join('frete_regrapromocao_regiao AS frr', 'frr.id_regrapromocao', 'fr.id')
+		->whereRaw('(p.valor_venda * ?) > fr.compra_minima', [$quantidade])
+		->where([
+			['p.id', $idProduto],
+			['p.reve_cod', $idLoja],
+			['fr.id_formaentrega', $idFormaDeEntrega],
+			['fr.cupom', false],
+			['fr.status', true],
+			['frr.esta_cod', $faixaCep->esta_cod],
+			['frr.id_capital', $faixaCep->id_capital],
+		])
+		->orderBy('fr.aplicavel_todocarrinho', 'DESC')
 		->first();
 	}
 
