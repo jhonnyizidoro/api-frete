@@ -7,7 +7,6 @@ use Carbon\Carbon;
 
 //Importação de controllers
 use App\Http\Controllers\Ecompleto\LojaController;
-use App\Http\Controllers\Ecompleto\ProdutoController;
 use App\Http\Controllers\Ecompleto\EnderecoController;
 use App\Http\Controllers\Transportadoras\CorreiosController;
 use App\Http\Controllers\Transportadoras\JamefController;
@@ -19,8 +18,15 @@ use App\Models\Ecompleto\Frete;
 
 class FreteController extends Controller
 {
-	public function calcularFreteProduto(int $idLoja, int $idProduto, string $cep, int $quantidade = 1)
+	public function calcularFrete(string $tipoDeCalculo, int $idLoja, int $idProduto, string $cep, int $quantidade = 1)
 	{
+		//TODO: Define qual controller será utilizado para os calculos
+		if ($tipoDeCalculo === 'produto') {
+			$__CONTROLLER = 'App\Http\Controllers\Ecompleto\ProdutoController';
+		} else {
+			$__CONTROLLER = 'App\Http\Controllers\Ecompleto\CarrinhoController';
+		}
+
 		//TODO: Verifica se o CEP está bloqueado para a entrega!
 		if (Self::buscarCepBloqueado($idLoja, $cep)) {
 			return json([], 'Erro ao calcular o frete, CEP bloqueado!', false, 403);
@@ -39,14 +45,14 @@ class FreteController extends Controller
 		foreach ($formasDeEntregaLoja as $formaDeEntrega) {
 			
 			//TODO: Verifica se o produto está bloqueado para essa forma de entrega
-			if (ProdutoController::buscarBloqueioTransportadora($idLoja, $idProduto, $formaDeEntrega->id)) {
+			if ($__CONTROLLER::buscarBloqueioTransportadora($idLoja, $idProduto, $formaDeEntrega->id)) {
 				continue;
 			}
 
 			//TODO: Busca informações do produto
-			$freteGratisProduto = ProdutoController::buscarFreteGratis($idLoja, $idProduto, $formaDeEntrega->id);
-			$promocaoFreteProduto = ProdutoController::buscarPromocaoFrete($idLoja, $idProduto, $quantidade, $formaDeEntrega->id, $faixaCep);
-			$medidasDoProduto = ProdutoController::buscarMedidasProduto($idLoja, $idProduto, $quantidade, $formaDeEntrega);
+			$freteGratisProduto = $__CONTROLLER::buscarFreteGratis($idLoja, $idProduto, $formaDeEntrega->id);
+			$promocaoFreteProduto = $__CONTROLLER::buscarPromocaoFrete($idLoja, $idProduto, $quantidade, $formaDeEntrega->id, $faixaCep);
+			$medidasDoProduto = $__CONTROLLER::buscarMedidasProduto($idLoja, $idProduto, $quantidade, $formaDeEntrega);
 
 			//TODO: Criando o objeto de retorno
 			$frete = [
