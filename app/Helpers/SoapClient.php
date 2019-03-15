@@ -3,7 +3,7 @@
 namespace App\Helpers;
 
 use SoapClient as PHPSoap;
-use SoapFault;
+use Exception;
 
 class SoapClient
 {
@@ -39,7 +39,7 @@ class SoapClient
 		try {
 			$client = new PHPSoap(Self::$wsdl, Self::$options);
 			return $client->__soapCall($functionName, Self::$parameters, Self::$location);
-		} catch (SoapFault $e) {
+		} catch (Exception $e) {
 			return false;
 		}
 	}

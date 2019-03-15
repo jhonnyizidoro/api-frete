@@ -23,7 +23,7 @@ class FreteController extends Controller
 	{
 		//TODO: Verifica se o CEP está bloqueado para a entrega!
 		if (Self::buscarCepBloqueado($idLoja, $cep)) {
-			return json([], 'Erro ao calcular o frete!', false, 403);
+			return json([], 'Erro ao calcular o frete, CEP bloqueado!', false, 403);
 		}
 		
 		//TODO: Informações da loja que serão necessárias para os calculos
@@ -61,7 +61,6 @@ class FreteController extends Controller
 			];
 
 			//TODO: Calcula o valor do frete
-			$valoresFrete = NULL;
 			if ($formaDeEntrega->id_servicorastreamento === 1) {
 				$valoresFrete = Self::buscarOrcamentoFrete($formaDeEntrega->id);
 			} elseif ($formaDeEntrega->calculo_online) {
@@ -80,13 +79,9 @@ class FreteController extends Controller
 				}
 			} else {
 				if ($formaDeEntrega->id_transportadora === 9) {
-
-				} elseif ($formaDeEntrega->id_transportadora === 249) {
-
-				} elseif ($formaDeEntrega->id_transportadora === 256) {
-					
+					$valoresFrete = Self::buscarRegraFretePorCep($idLoja, $cep, $formaDeEntrega);
 				} else {
-
+					$valoresFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidasDoProduto);
 				}
 			}
 
@@ -101,7 +96,7 @@ class FreteController extends Controller
 			$frete['prazo_entrega'] += $informacoesPrivadasLoja->prazo_logistica;
 			$frete['prazo_entrega'] += Self::calcularDiasAdicionaisFeriado($idLoja, $frete['prazo_entrega']);
 
-			//TODO: somando valor adicional ao frete. Tando o valor adicional da forma de entrega quando o da configuração da loja
+			//TODO: somando valor adicional ao frete. Tanto o valor adicional da forma de entrega quando o da configuração da loja
 			if ($formaDeEntrega->tipo_adicional === 'P') {
 				$frete['valor_frete'] += $frete['valor_frete'] * $formaDeEntrega->valor_adicional / 100;
 			} else {
@@ -118,9 +113,7 @@ class FreteController extends Controller
 			array_push($fretes, $frete);
 
 		}
-		
 		return json($fretes, 'Sucesso ao calcular o frete', true, 200);
-		
 	}
 
 	/**

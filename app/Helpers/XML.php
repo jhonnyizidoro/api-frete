@@ -2,27 +2,30 @@
 
 namespace App\Helpers;
 
-use SimpleXMLElement;
 use DOMDocument;
 use stdClass;
+use Exception;
 
 class XML
 {
 	private static $instance = null;
-	private static $xmlArray = null;
-	
+	private static $xmlArray = false;
+
 	public static function parse($xmlString)
 	{
-		$document = new DOMDocument;
-		$document->loadXML($xmlString);
-		$rootElement = $document->documentElement;
-		$output = Self::nodeToArray($rootElement);
-		$output['@root'] = $rootElement->tagName;
 		if (Self::$instance === null) {
 			Self::$instance = new Self;
 		}
-		Self::$xmlArray = $output;
-		return Self::$instance;
+		try {
+			$document = new DOMDocument;
+			$document->loadXML($xmlString);
+			$rootElement = $document->documentElement;
+			$output = Self::nodeToArray($rootElement);
+			$output['@root'] = $rootElement->tagName;
+			Self::$xmlArray = $output;
+		} finally {
+			return Self::$instance;
+		}
 	}
 	
 	public static function nodeToArray($node) {
@@ -78,9 +81,11 @@ class XML
 
 	public function toObject()
 	{
-		return Self::arrayToObject(Self::$xmlArray);
+		if (Self::$xmlArray) {
+			return Self::arrayToObject(Self::$xmlArray);
+		}
+		return false;
 	}
-
 
 	public function arrayToObject($array)
 	{
@@ -97,5 +102,4 @@ class XML
 		}
 		return $object;
 	}
-	
 }
