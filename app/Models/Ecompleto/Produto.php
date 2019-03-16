@@ -47,7 +47,7 @@ class Produto extends Model
 			['id_formaentrega', $idFormaDeEntrega],
 			['id_loja', $idLoja]
 		])
-		->first();
+		->exists();
 	}
 
 	public static function promocaoFrete(int $idLoja, int $idProduto, int $quantidade, int $idFormaDeEntrega, object $faixaCep)
@@ -55,14 +55,14 @@ class Produto extends Model
 		return  DB::table('produtos AS p')
 		->select('fr.*')
 		->leftJoin('produtos_multicategoria AS pm', 'pm.id_produto', 'p.id')
-		->leftJoin('frete_regrapromocao_categorias AS frc', 'frc.id_cateprod', 'p.id_categoria')
-		->leftJoin('frete_regrapromocao_fabricante AS frf', function($join) {
-			$join->on('frf.id_fabricante', 'p.id_fabricante');
-			$join->orOn('frf.id_fabricante', 'pm.id_categoria_1');
-			$join->orOn('frf.id_fabricante', 'pm.id_categoria_2');
-			$join->orOn('frf.id_fabricante', 'pm.id_categoria_3');
-			$join->orOn('frf.id_fabricante', 'pm.id_categoria_4');
-			$join->orOn('frf.id_fabricante', 'pm.id_categoria_5');
+		->leftJoin('frete_regrapromocao_fabricante AS frf', 'frf.id_fabricante', 'p.id_fabricante')
+		->leftJoin('frete_regrapromocao_categorias AS frc', function($join) {
+			$join->on('frc.id_cateprod', 'p.id_categoria');
+			$join->orOn('frc.id_cateprod', 'pm.id_categoria_1');
+			$join->orOn('frc.id_cateprod', 'pm.id_categoria_2');
+			$join->orOn('frc.id_cateprod', 'pm.id_categoria_3');
+			$join->orOn('frc.id_cateprod', 'pm.id_categoria_4');
+			$join->orOn('frc.id_cateprod', 'pm.id_categoria_5');
 		})
 		->join('frete_regrapromocao AS fr', function($join) {
 			$join->on('fr.id', 'frc.id_regrapromocao');
@@ -80,6 +80,7 @@ class Produto extends Model
 			['frr.id_capital', $faixaCep->id_capital],
 		])
 		->orderBy('fr.aplicavel_todocarrinho', 'DESC')
+		->distinct()
 		->first();
 	}
 

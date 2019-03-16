@@ -18,7 +18,7 @@ use App\Models\Ecompleto\Frete;
 
 class FreteController extends Controller
 {
-	public function calcularFrete(string $tipoDeCalculo, int $idLoja, int $idProduto, string $cep, int $quantidade = 1)
+	public function calcularFrete(string $tipoDeCalculo, int $idLoja, int $idObjeto, string $cep, int $quantidade = 1)
 	{
 		//TODO: Define qual controller será utilizado para os calculos
 		if ($tipoDeCalculo === 'produto') {
@@ -44,15 +44,15 @@ class FreteController extends Controller
 		
 		foreach ($formasDeEntregaLoja as $formaDeEntrega) {
 			
-			//TODO: Verifica se o produto está bloqueado para essa forma de entrega
-			if ($__CONTROLLER::buscarBloqueioTransportadora($idLoja, $idProduto, $formaDeEntrega->id)) {
+			//TODO: Verifica se o produto ou algum dos produtos do carrinho está bloqueado para essa forma de entrega
+			if ($__CONTROLLER::buscarBloqueioTransportadora($idLoja, $idObjeto, $formaDeEntrega->id)) {
 				continue;
 			}
 
-			//TODO: Busca informações do produto
-			$freteGratisProduto = $__CONTROLLER::buscarFreteGratis($idLoja, $idProduto, $formaDeEntrega->id);
-			$promocaoFreteProduto = $__CONTROLLER::buscarPromocaoFrete($idLoja, $idProduto, $quantidade, $formaDeEntrega->id, $faixaCep);
-			$medidasDoProduto = $__CONTROLLER::buscarMedidasProduto($idLoja, $idProduto, $quantidade, $formaDeEntrega);
+			//TODO: Busca informações do produto ou do carrinho
+			$freteGratis = $__CONTROLLER::buscarFreteGratis($idLoja, $idObjeto, $formaDeEntrega->id);
+			$promocaoFrete = $__CONTROLLER::buscarPromocaoFrete($idLoja, $idObjeto, $quantidade, $formaDeEntrega->id, $faixaCep);
+			$medidasDoProduto = $__CONTROLLER::buscarMedidasProduto($idLoja, $idObjeto, $quantidade, $formaDeEntrega);
 
 			//TODO: Criando o objeto de retorno
 			$frete = [
@@ -62,7 +62,7 @@ class FreteController extends Controller
 				'destino' => $destinoDeEntrega,
 				'image_icon' => $formaDeEntrega->image_icon,
 				'frete_gratis' => $formaDeEntrega->frete_gratis,
-				'promocao_frete' => $freteGratisProduto,
+				'promocao_frete' => $freteGratis,
 				'transportadora' => $formaDeEntrega->transportadora,
 				'exibe_prazoentrega' => $formaDeEntrega->exibe_prazoentrega
 			];
@@ -118,8 +118,8 @@ class FreteController extends Controller
 			$frete['valor_frete_original'] = $frete['valor_frete'];
 
 			//TODO: alterando o valor do frete com bas nas promoções
-			if ($promocaoFreteProduto) {
-				$frete['valor_frete'] -= $frete['valor_frete'] * $promocaoFreteProduto->desconto / 100;
+			if ($promocaoFrete) {
+				$frete['valor_frete'] -= $frete['valor_frete'] * $promocaoFrete->desconto / 100;
 			}
 
 			array_push($fretes, $frete);

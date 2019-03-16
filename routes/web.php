@@ -1,5 +1,5 @@
 <?php
 
-Route::get('/info', function () {
+Route::get('/', function () {
     die(phpinfo());
 });
