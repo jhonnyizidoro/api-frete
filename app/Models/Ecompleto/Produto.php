@@ -80,6 +80,7 @@ class Produto extends Model
 			['frr.id_capital', $faixaCep->id_capital],
 		])
 		->orderBy('fr.aplicavel_todocarrinho', 'DESC')
+		->distinct()
 		->first();
 	}
 

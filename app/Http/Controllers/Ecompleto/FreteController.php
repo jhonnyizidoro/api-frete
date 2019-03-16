@@ -52,6 +52,7 @@ class FreteController extends Controller
 			//TODO: Busca informações do produto ou do carrinho
 			$freteGratis = $__CONTROLLER::buscarFreteGratis($idLoja, $idObjeto, $formaDeEntrega->id);
 			$promocaoFrete = $__CONTROLLER::buscarPromocaoFrete($idLoja, $idObjeto, $formaDeEntrega->id, $faixaCep, $quantidade);
+			dd($promocaoFrete);
 			$medidas = $__CONTROLLER::buscarMedidas($idLoja, $idObjeto, $formaDeEntrega, $quantidade);
 
 			//TODO: Criando o objeto de retorno
