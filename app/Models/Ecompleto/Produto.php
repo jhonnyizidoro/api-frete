@@ -50,7 +50,7 @@ class Produto extends Model
 		->exists();
 	}
 
-	public static function promocaoFrete(int $idLoja, int $idProduto, int $quantidade, int $idFormaDeEntrega, object $faixaCep)
+	public static function promocaoFrete(int $idLoja, int $idProduto, int $idFormaDeEntrega, object $faixaCep, int $quantidade)
 	{
 		return  DB::table('produtos AS p')
 		->select('fr.*')
@@ -80,7 +80,6 @@ class Produto extends Model
 			['frr.id_capital', $faixaCep->id_capital],
 		])
 		->orderBy('fr.aplicavel_todocarrinho', 'DESC')
-		->distinct()
 		->first();
 	}
 

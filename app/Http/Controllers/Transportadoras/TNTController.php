@@ -15,7 +15,7 @@ class TNTController extends Controller
 {
 	private static $curlUrl = 'http://ws.tntbrasil.com.br/servicos/CalculoFrete';
 
-	public static function calcularFrete(int $idLoja, string $cep, object $enderecoLoja, object $medidasDoProduto, object $formaDeEntrega, object $informacoesPrivadasLoja)
+	public static function calcularFrete(int $idLoja, string $cep, object $enderecoLoja, object $medidas, object $formaDeEntrega, object $informacoesPrivadasLoja)
 	{
 		$loginTNT = LojaController::buscarParametro($idLoja, 'ws_tnt_login');
 
@@ -61,7 +61,7 @@ class TNTController extends Controller
 						'mod:nrIdentifClienteRem' => $cnpjTNT,
 						'mod:nrInscricaoEstadualDestinatario' => '',
 						'mod:nrInscricaoEstadualRemetente' => $inscricaoEstadualTNT,
-						'mod:psReal' => $medidasDoProduto->peso,
+						'mod:psReal' => $medidas->peso,
 						'mod:senha' => '',
 						'mod:tpFrete' => $tipoFreteTNT,
 						'mod:tpPessoaDestinatario' => 'F',
@@ -69,7 +69,7 @@ class TNTController extends Controller
 						'mod:tpServico' => $servicoTNT,
 						'mod:tpSituacaoTributariaDestinatario' => 'CO',
 						'mod:tpSituacaoTributariaRemetente' => $situacaoTributariaTNT,
-						'mod:vlMercadoria' => $medidasDoProduto->valor_venda_nota,
+						'mod:vlMercadoria' => $medidas->valor_venda_nota,
 					]
 				]
 			]

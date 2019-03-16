@@ -15,7 +15,7 @@ class Frete extends Model
 			['cep_ini', '<=', $cep],
 			['cep_fim', '>=', $cep],
 		])
-		->first();
+		->exists();
 	}
 
 	public static function regraPorCep(int $idLoja, string $cep, int $idFormaDeEntrega)

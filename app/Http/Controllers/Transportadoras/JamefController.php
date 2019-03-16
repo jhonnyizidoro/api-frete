@@ -10,7 +10,7 @@ class JamefController extends Controller
 {
 	private static $soapUrl = 'http://www.jamef.com.br/webservice/JAMW0520.apw?WSDL';
 
-	public static function calcularFrete(string $cep, object $enderecoLoja, object $formaDeEntrega, object $medidasDoProduto, object $informacoesPrivadasLoja)
+	public static function calcularFrete(string $cep, object $enderecoLoja, object $formaDeEntrega, object $medidas, object $informacoesPrivadasLoja)
 	{
 		$response = SoapClient::wsdl(Self::$soapUrl)
 		->timeout(5)
@@ -22,9 +22,9 @@ class JamefController extends Controller
 				'ESTORI' => $enderecoLoja->esta_cod,
 				'SEGPROD' => '000004',
 				'QTDVOL' => 1,
-				'PESO' => $medidasDoProduto->peso,
-				'VALMER' => $medidasDoProduto->valor_venda_nota,
-				'METRO3' => $medidasDoProduto->peso_cubico,
+				'PESO' => $medidas->peso,
+				'VALMER' => $medidas->valor_venda_nota,
+				'METRO3' => $medidas->peso_cubico,
 				'CNPJDES' => $informacoesPrivadasLoja->cnpj,
 				'CEPDES' => str_replace('-', '', $cep),
 			]

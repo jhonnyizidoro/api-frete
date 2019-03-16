@@ -9,9 +9,9 @@ use App\Models\Ecompleto\Produto;
 
 class ProdutoController extends Controller
 {
-	public static function buscarMedidasProduto(int $idLoja, int $idProduto, int $quantidade, object $formaDeEntrega)
+	public static function buscarMedidas(int $idLoja, int $idProduto, object $formaDeEntrega, int $quantidade)
 	{
-		$medidas = Produto::medidas($idLoja, $idProduto, $quantidade, $formaDeEntrega);
+		$medidas = Produto::medidas($idLoja, $idProduto);
 		$medidas->valor_venda_nota = $medidas->valor_venda;
 		//TODO: Ao cadastrar uma forma de entrega é possível marcar um checkbox que leva em conta a $quantidade de produtos ao calcular o frete
 		if ($formaDeEntrega->calculo_itens_adicionais) {
@@ -40,8 +40,8 @@ class ProdutoController extends Controller
 		return Produto::bloqueioTransportadora($idLoja, $idProduto, $idFormaDeEntrega);
 	}
 
-	public static function buscarPromocaoFrete(int $idLoja, int $idProduto, int $quantidade, int $idFormaDeEntrega, object $faixaCep)
+	public static function buscarPromocaoFrete(int $idLoja, int $idProduto, int $idFormaDeEntrega, object $faixaCep, int $quantidade)
 	{
-		return Produto::promocaoFrete($idLoja, $idProduto, $quantidade, $idFormaDeEntrega, $faixaCep);
+		return Produto::promocaoFrete($idLoja, $idProduto, $idFormaDeEntrega, $faixaCep, $quantidade);
 	}
 }
