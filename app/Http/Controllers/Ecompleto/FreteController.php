@@ -52,7 +52,6 @@ class FreteController extends Controller
 			//TODO: Busca informações do produto ou do carrinho
 			$freteGratis = $__CONTROLLER::buscarFreteGratis($idLoja, $idObjeto, $formaDeEntrega->id);
 			$promocaoFrete = $__CONTROLLER::buscarPromocaoFrete($idLoja, $idObjeto, $formaDeEntrega->id, $faixaCep, $quantidade);
-			dd($promocaoFrete);
 			$medidas = $__CONTROLLER::buscarMedidas($idLoja, $idObjeto, $formaDeEntrega, $quantidade);
 
 			//TODO: Criando o objeto de retorno
@@ -119,6 +118,7 @@ class FreteController extends Controller
 			$frete['valor_frete_original'] = $frete['valor_frete'];
 
 			//TODO: alterando o valor do frete com bas nas promoções
+			//PRECISA ARRUMAR O DESCONTO PARA CARRINHO
 			if ($promocaoFrete) {
 				$frete['valor_frete'] -= $frete['valor_frete'] * $promocaoFrete->desconto / 100;
 			}

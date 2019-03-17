@@ -9,18 +9,17 @@ class Produto extends Model
 {
 	public static function medidas(int $idLoja, int $idProduto)
 	{
-		return DB::table('produtos AS p')
+		return DB::table('produtos')
 		->select(
-			'p.id',
-			'p.peso',
-			'p.largura',
-			'p.profundidade',
-			'p.altura',
-			'p.valor_venda'
+			'peso',
+			'largura',
+			'profundidade',
+			'altura',
+			'valor_venda'
 		)
 		->where([
-			['p.id', $idProduto],
-			['p.reve_cod', $idLoja],
+			['id', $idProduto],
+			['reve_cod', $idLoja],
 		])
 		->first();
 	}
@@ -80,6 +79,7 @@ class Produto extends Model
 			['frr.id_capital', $faixaCep->id_capital],
 		])
 		->orderBy('fr.aplicavel_todocarrinho', 'DESC')
+		->orderBy('fr.desconto', 'DESC')
 		->distinct()
 		->first();
 	}
