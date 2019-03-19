@@ -109,6 +109,7 @@ class Carrinho extends Model
 		->orderBy('fr.aplicavel_todocarrinho', 'DESC')
 		->orderBy('fr.desconto', 'DESC')
 		->distinct()
+		->pluck('fr.desconto')
 		->first();
 	}
 }

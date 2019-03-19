@@ -120,12 +120,12 @@ class FreteController extends Controller
 			//TODO: alterando o valor do frete com bas nas promoções
 			//PRECISA ARRUMAR O DESCONTO PARA CARRINHO
 			if ($promocaoFrete) {
-				$frete['valor_frete'] -= $frete['valor_frete'] * $promocaoFrete->desconto / 100;
+				$frete['valor_frete'] -= $frete['valor_frete'] * $promocaoFrete / 100;
 			}
-
+	
 			array_push($fretes, $frete);
-
 		}
+
 		return json($fretes, 'Sucesso ao calcular o frete', true, 200);
 	}
 

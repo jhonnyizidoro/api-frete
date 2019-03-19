@@ -62,3 +62,24 @@ if (!function_exists('standardizeFloat'))
 		return floatval($value);
 	}
 }
+
+/**
+* @param value: valor em string ou float que será convertido
+* TODO: recebe um valor no formato local e retorna no formato padrão. Exemplo: '1.000,00' e retorna 1000.00
+*/
+if (!function_exists('getHigherPropertyItem'))
+{
+	function getHigherPropertyItem($array, string $property)
+	{
+		$higherPropertyItem = false;
+		if (count($array) > 0) {
+			$higherPropertyItem = $array[0];
+		}
+		foreach ($array as $key => $item) {
+			if ($item->$property > $higherPropertyItem->$property) {
+				$higherPropertyItem = $array[$key];
+			}
+		}
+		return $higherPropertyItem;
+	}
+}

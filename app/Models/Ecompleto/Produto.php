@@ -78,10 +78,9 @@ class Produto extends Model
 			['frr.esta_cod', $faixaCep->esta_cod],
 			['frr.id_capital', $faixaCep->id_capital],
 		])
-		->orderBy('fr.aplicavel_todocarrinho', 'DESC')
 		->orderBy('fr.desconto', 'DESC')
 		->distinct()
+		->pluck('fr.desconto')
 		->first();
 	}
-
 }
