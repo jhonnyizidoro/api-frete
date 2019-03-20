@@ -12,7 +12,7 @@ class ProdutoController extends Controller
 	public static function buscarMedidas(int $idLoja, int $idProduto, object $formaDeEntrega, int $quantidade)
 	{
 		$medidas = Produto::medidas($idLoja, $idProduto);
-		$medidas->valor_venda_nota = $medidas->valor_venda;
+		$medidas->valor_venda_nota = $medidas->valor_venda * $quantidade;
 		//TODO: Ao cadastrar uma forma de entrega é possível marcar um checkbox que leva em conta a $quantidade de produtos ao calcular o frete
 		if ($formaDeEntrega->calculo_itens_adicionais) {
 			$medidas->peso = round($medidas->peso * $quantidade, 4);

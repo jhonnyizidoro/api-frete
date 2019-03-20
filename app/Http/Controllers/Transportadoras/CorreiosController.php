@@ -29,7 +29,7 @@ class CorreiosController extends Controller
 	{
 		$medidas = Self::formatarMedidasCorreios($medidas, $idLoja);
 		$response = Curl::to(Self::$curlUrl)
-		->withTimeout(5)
+		->withTimeout(555)
 		->withData([
 			'nCdEmpresa' => $informacoesLoja->correios_cdempresa,
 			'sDsSenha' => $informacoesLoja->correios_dssenha,

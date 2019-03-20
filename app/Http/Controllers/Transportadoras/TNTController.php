@@ -85,7 +85,7 @@ class TNTController extends Controller
 
 		//TODO: Enviando o XML
 		$response = Curl::to(Self::$curlUrl)
-		->withTimeout(5)
+		->withTimeout(555)
 		->withHeaders([
 			"Content-type: text/xml;charset='UTF-8'",
 			'Accept: text/xml',
@@ -99,11 +99,10 @@ class TNTController extends Controller
 
 		//TODO: retornando a resposta
 		$response = XML::parse($response)->toObject();
-		$response = $response->Body->calculaFreteResponse->out;
-		if (!$response->errorList) {
+		if (is_object($response) && !$response->Body->calculaFreteResponse->out->errorList) {
 			return [
-				'valor_frete' => $response->vlTotalFrete,
-				'prazo_entrega' => $response->prazoEntrega
+				'valor_frete' => $response->Body->calculaFreteResponse->out->vlTotalFrete,
+				'prazo_entrega' => $response->Body->calculaFreteResponse->out->prazoEntrega
 			];
 		}
 		return false;
