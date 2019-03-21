@@ -82,9 +82,9 @@ class FreteController extends Controller
 				$valoresFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidas);
 			} else { //INTEGRAÇÃO
 
-				//TODO: Busca as tabelas de frete para fazer o calculo da integração
+				//TODO: Busca as tabelas de frete para fazer o calculo da integração (Correios não precisa de tabela de frete)
 				$regraDeFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidas);
-				if (!$regraDeFrete) {
+				if (!$regraDeFrete && $formaDeEntrega->id_transportadora !== 1) {
 					continue;
 				}
 
@@ -128,6 +128,7 @@ class FreteController extends Controller
 
 			//TODO: alterando o valor do frete com bas nas promoções
 			//PRECISA ARRUMAR O DESCONTO PARA CARRINHO
+			$frete['valor_frete_original'] = $frete['valor_frete'];
 			if ($promocaoFrete) {
 				$frete['valor_frete'] -= $frete['valor_frete'] * $promocaoFrete / 100;
 			}

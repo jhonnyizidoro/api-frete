@@ -49,8 +49,8 @@ class CorreiosController extends Controller
 		->post();
 
 		$response = XML::parse($response)->toObject();
-		
-		if (isset($response->Servicos->cServico->Erro) && in_array($response->Servicos->cServico->Erro, Self::$errosPermitidos)) {
+
+		if (isset($response->Servicos->cServico) && in_array($response->Servicos->cServico->Erro, Self::$errosPermitidos)) {
 			$response = $response->Servicos->cServico;
 			$response->Valor = standardizeFloat($response->Valor);
 			$response->Valor += $response->Valor * $informacoesLoja->correios_taxatransporte;
