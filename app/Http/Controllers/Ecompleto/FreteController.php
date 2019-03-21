@@ -78,7 +78,17 @@ class FreteController extends Controller
 			//TODO: Calcula o frete para as formas de entrega da loja
 			if ($formaDeEntrega->id_transportadora === 9) { //RETIRADA NA LOJA
 				$valoresFrete = Self::buscarRegraFretePorCep($idLoja, $cep, $formaDeEntrega);
-			} elseif ($formaDeEntrega->calculo_online) { //INTEGRAÇÃO
+			} elseif (!$formaDeEntrega->calculo_online) { //TABELA DE FRETE
+				$valoresFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidas);
+			} else { //INTEGRAÇÃO
+
+				//TODO: Busca as tabelas de frete para fazer o calculo da integração
+				$regraDeFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidas);
+				if (!$regraDeFrete) {
+					continue;
+				}
+
+				//TODO: Faz a consulta nas APIs das transportadoras
 				if ($formaDeEntrega->id_transportadora === 1) {
 					$valoresFrete = CorreiosController::calcularFrete($idLoja, $cep, $enderecoLoja->cep, $formaDeEntrega->id_servicorastreamento, $medidas, $informacoesPrivadasLoja);
 				} elseif ($formaDeEntrega->codigo_integrador === 413) {
@@ -88,10 +98,12 @@ class FreteController extends Controller
 				} elseif ($formaDeEntrega->id_transportadora === 176) {
 					$valoresFrete = TNTController::calcularFrete($idLoja, $cep, $enderecoLoja, $medidas, $formaDeEntrega, $informacoesPrivadasLoja);
 				} else {
-					$valoresFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidas);
+					$valoresFrete = ['valor_frete' => 0, 'prazo_entrega' => 0];
 				}
-			} else { //TABELA DE FRETE
-				$valoresFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidas);
+
+				//TODO: Verifica se existe alguma valor ou prazo adicional na regra de frete
+				$valoresFrete['valor_frete'] += Self::calcularValorAdicional($formaDeEntrega, $regraDeFrete['valor_frete']);
+				$valoresFrete['valor_frete'] += $regraDeFrete['valor_frete'];
 			}
 
 			//TODO: Adiciona o novo valor calculado no array de retorno
@@ -104,20 +116,15 @@ class FreteController extends Controller
 			//TODO: Somando o prazo adicional caso exista
 			$frete['prazo_entrega'] += $informacoesPrivadasLoja->prazo_logistica;
 			$frete['prazo_entrega'] += Self::calcularDiasAdicionaisFeriado($idLoja, $frete['prazo_entrega']);
-
-			//TODO: somando valor adicional ao frete. Tanto o valor adicional da forma de entrega quando o da configuração da loja
-			if ($formaDeEntrega->tipo_adicional === 'P') {
-				$frete['valor_frete'] += $frete['valor_frete'] * $formaDeEntrega->valor_adicional / 100;
-			} else {
-				$frete['valor_frete'] += $formaDeEntrega->valor_adicional;
-			}
+		
+			//TODO: Somando valores adicionais e verificando se o valor de frete repeita o frete mínimo da loja
+			$valoresFrete['valor_frete'] += Self::calcularValorAdicional($formaDeEntrega, $valoresFrete['valor_frete']);
 			if ($informacoesPrivadasLoja->sobretaxa_frete > 0) {
 				$frete['valor_frete'] *= $informacoesPrivadasLoja->sobretaxa_frete;
 			}
-			if ($informacoesPrivadasLoja->frete_minimo > $frete['valor_frete']) {
+			if ($informacoesPrivadasLoja->frete_minimo > $frete['valor_frete'] && $frete['valor_frete'] > 0) {
 				$frete['valor_frete'] = $informacoesPrivadasLoja->frete_minimo;
 			}
-			$frete['valor_frete_original'] = $frete['valor_frete'];
 
 			//TODO: alterando o valor do frete com bas nas promoções
 			//PRECISA ARRUMAR O DESCONTO PARA CARRINHO
@@ -131,10 +138,15 @@ class FreteController extends Controller
 		return json($fretes, 'Sucesso ao calcular o frete', true, 200);
 	}
 
-	/**
-	 * TODO: Verifica se existe algum orçamento com os dados passados. Também verifica as formas de entrega com Transportadora = COTAÇÃO DE FRETE
-	 * @return: caso encontre o orçamento retorna o valor do frete, caso não encontre retorna 0 (cotação de frete)
-	 */
+	public static function calcularValorAdicional($formaDeEntrega, $valorFrete)
+	{
+		if ($formaDeEntrega->tipo_adicional === 'P') {
+			return $valorFrete * $formaDeEntrega->valor_adicional / 100;
+		} else {
+			return $formaDeEntrega->valor_adicional;
+		}
+	}
+
 	public static function buscarOrcamentoFrete(int $idFormaDeEntrega, int $idOrcamento = 0)
 	{
 		$orcamento = Frete::orcamento($idFormaDeEntrega, $idOrcamento);
@@ -150,10 +162,6 @@ class FreteController extends Controller
 		]; 
 	}
 
-	/**
-	* TODO: Verifica se existe alguma regra específica para o CEP informado. Essa informação pode ser acessada em 'Frete' → 'Frete por Região de CEP'
-	* @return: retorna o prazo e o valor da entrega caso exista, caso não exista retorna FALSE
-	*/
 	public static function buscarRegraFretePorCep(int $idLoja, string $cep, object $formaDeEntrega)
 	{
 		$regraDeFrete = Frete::regraPorCep($idLoja, $cep, $formaDeEntrega->id);
@@ -166,11 +174,6 @@ class FreteController extends Controller
 		return false;
 	}
 	
-	/**
-	* TODO: Verifica se existe alguma regra cadastrada para a faixa de CEP informada. Essa informação pode ser acessada em 'Frete' → 'Tabela de Frete'
-	* @return: na tabela de frete é possível configurar alguns valores adicionais. isso é tratado antes de retornar os valores de frete
-	* @return: retorna o prazo e o valor da entrega caso exista, caso não exista retorna FALSE
-	*/
 	public static function buscarRegraFrete(int $idLoja, object $faixaCep, object $formaDeEntrega, object $medidas)
 	{
 		$regraDeFrete = Frete::regra($idLoja, $faixaCep, $formaDeEntrega->id, $medidas->peso);
@@ -187,20 +190,12 @@ class FreteController extends Controller
 		return false;
 	}
 
-	/**
-	* TODO: Verifica se existe algum feriado onde a loja não irá funcionar para acrescentar esses dias ao prazo de entrega.
-	* @return: retorna o prazo de entrega somado com a quantidade de feriados existentes entre hoje e a data prevista
-	*/
 	public static function calcularDiasAdicionaisFeriado(int $idLoja, int $prazoDeEntrega)
 	{
 		$dataDeEntrega = Carbon::now()->addDay($prazoDeEntrega)->format('Y-m-d');
 		return Frete::diasAdicionaisFeriado($idLoja, $dataDeEntrega);
 	}
 
-	/**
-	* TODO: Verifica se o CEP informado está na lista de bloqueio que pode ser acessada em 'Frete' → 'Bloqueio de CEP'
-	* @return: retorna um registro do banco de dados caso encontre ou NULL caso não encontre
-	*/
 	public static function buscarCepBloqueado(int $idLoja, string $cep)
 	{
 		return Frete::cepBloqueado($idLoja, $cep);
