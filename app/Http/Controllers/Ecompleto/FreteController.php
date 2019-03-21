@@ -67,14 +67,20 @@ class FreteController extends Controller
 				'exibe_prazoentrega' => $formaDeEntrega->exibe_prazoentrega
 			];
 
-			//TODO: Calcula o valor do frete
+			//TODO: Calcula o valor do frete cotação de frete e retirada na loja
 			if ($formaDeEntrega->id_servicorastreamento === 1) {
 				$valoresFrete = Self::buscarOrcamentoFrete($formaDeEntrega->id);
-			} elseif ($formaDeEntrega->calculo_online) {
+				$frete = array_merge($frete, $valoresFrete);
+				$fretes[] = $frete;
+				continue;
+			}
+
+			//TODO: Calcula o frete para as formas de entrega da loja
+			if ($formaDeEntrega->id_transportadora === 9) { //RETIRADA NA LOJA
+				$valoresFrete = Self::buscarRegraFretePorCep($idLoja, $cep, $formaDeEntrega);
+			} elseif ($formaDeEntrega->calculo_online) { //INTEGRAÇÃO
 				if ($formaDeEntrega->id_transportadora === 1) {
 					$valoresFrete = CorreiosController::calcularFrete($idLoja, $cep, $enderecoLoja->cep, $formaDeEntrega->id_servicorastreamento, $medidas, $informacoesPrivadasLoja);
-				} elseif ($formaDeEntrega->id_transportadora === 9) {
-					$valoresFrete = Self::buscarRegraFretePorCep($idLoja, $cep, $formaDeEntrega);
 				} elseif ($formaDeEntrega->codigo_integrador === 413) {
 					$valoresFrete = JamefController::calcularFrete($cep, $enderecoLoja, $formaDeEntrega, $medidas, $informacoesPrivadasLoja);
 				} elseif ($formaDeEntrega->id_transportadora === 27) {
@@ -84,12 +90,8 @@ class FreteController extends Controller
 				} else {
 					$valoresFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidas);
 				}
-			} else {
-				if ($formaDeEntrega->id_transportadora === 9) {
-					$valoresFrete = Self::buscarRegraFretePorCep($idLoja, $cep, $formaDeEntrega);
-				} else {
-					$valoresFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidas);
-				}
+			} else { //TABELA DE FRETE
+				$valoresFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidas);
 			}
 
 			//TODO: Adiciona o novo valor calculado no array de retorno
@@ -123,7 +125,7 @@ class FreteController extends Controller
 				$frete['valor_frete'] -= $frete['valor_frete'] * $promocaoFrete / 100;
 			}
 	
-			array_push($fretes, $frete);
+			$fretes[] = $frete;
 		}
 
 		return json($fretes, 'Sucesso ao calcular o frete', true, 200);

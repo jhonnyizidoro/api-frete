@@ -50,11 +50,13 @@ class CorreiosController extends Controller
 
 		$response = XML::parse($response)->toObject();
 		
-		if (is_object($response) && in_array($response->Servicos->cServico->Erro, Self::$errosPermitidos)) {
+		if (isset($response->Servicos->cServico->Erro) && in_array($response->Servicos->cServico->Erro, Self::$errosPermitidos)) {
 			$response = $response->Servicos->cServico;
+			$response->Valor = standardizeFloat($response->Valor);
+			$response->Valor += $response->Valor * $informacoesLoja->correios_taxatransporte;
 			return [
-				'valor_frete' => standardizeFloat($response->Valor),
-				'prazo_entrega' => intval($response->PrazoEntrega),
+				'valor_frete' => $response->Valor,
+				'prazo_entrega' => $response->PrazoEntrega,
 			];
 		}
 		return false;
