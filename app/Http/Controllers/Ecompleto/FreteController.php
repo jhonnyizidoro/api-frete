@@ -53,7 +53,6 @@ class FreteController extends Controller
 			$freteGratis = $__CONTROLLER::buscarFreteGratis($idLoja, $idObjeto, $formaDeEntrega->id);
 			$promocaoFrete = $__CONTROLLER::buscarPromocaoFrete($idLoja, $idObjeto, $formaDeEntrega->id, $faixaCep, $quantidade);
 			$medidas = $__CONTROLLER::buscarMedidas($idLoja, $idObjeto, $formaDeEntrega, $quantidade);
-
 			//TODO: Criando o objeto de retorno
 			$frete = [
 				'id' => $formaDeEntrega->id,
@@ -127,6 +126,7 @@ class FreteController extends Controller
 			if ($informacoesPrivadasLoja->frete_minimo > $frete['valor_frete'] && $frete['valor_frete'] > 0) {
 				$frete['valor_frete'] = $informacoesPrivadasLoja->frete_minimo;
 			}
+			$frete['valor_frete'] = round($frete['valor_frete'], 4);
 
 			//TODO: alterando o valor do frete com bas nas promoções
 			//PRECISA ARRUMAR O DESCONTO PARA CARRINHO
@@ -202,5 +202,18 @@ class FreteController extends Controller
 	public static function buscarCepBloqueado(int $idLoja, string $cep)
 	{
 		return Frete::cepBloqueado($idLoja, $cep);
+	}
+
+	public static function calcularMedidasEmbalagem(int $idLoja, object $medidas)
+	{
+		$embalagem = Frete::buscarEmbalagemPorVolume($idLoja, $medidas->volume);
+		if ($embalagem) {
+			$medidas->largura = $embalagem->largura;
+			$medidas->profundidade = $embalagem->profundidade;
+			$medidas->altura = $embalagem->altura;
+			$medidas->volume = $embalagem->volume;
+			$medidas->peso += $embalagem->peso;
+		}
+		return $medidas;
 	}
 }

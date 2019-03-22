@@ -76,4 +76,16 @@ class Frete extends Model
 		])
 		->first();
 	}
+
+	public static function buscarEmbalagemPorVolume(int $idLoja, float $volume)
+	{
+		return DB::table('frete_embalagens')
+		->where([
+			['id_loja', $idLoja],
+			['status', true],
+			['volume', '>', $volume]
+		])
+		->orderBy('volume', 'ASC')
+		->first();
+	}
 }

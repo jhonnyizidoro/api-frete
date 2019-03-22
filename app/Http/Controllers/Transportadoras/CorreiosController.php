@@ -96,6 +96,13 @@ class CorreiosController extends Controller
 			}
 		}
 
+		//Caso a altura seja maior que a largura os valores s"ao invertidos
+		if ($medidas->altura > $medidas->profundidade) {
+			$novaAltura = $medidas->profundidade;
+			$medidas->profundidade = $medidas->altura;
+			$medidas->altura = $novaAltura;
+		}
+
 		return $medidas;
 	}
 

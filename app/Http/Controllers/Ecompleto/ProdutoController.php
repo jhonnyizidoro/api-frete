@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Ecompleto;
 
 use App\Http\Controllers\Controller;
 
+//Importação de Controlles
+use App\Http\Controllers\Ecompleto\FreteController;
+
 //Importação de Models
 use App\Models\Ecompleto\Produto;
 
@@ -26,6 +29,16 @@ class ProdutoController extends Controller
 		//TODO: Ao cadastrar uma forma de entrega é possível marcar um checkbox que envia o valor do produto para os calculos dos correios
 		if (!$formaDeEntrega->valor_declarado) {
 			$medidas->valor_venda = 0;
+		}
+		//TODO: Verifica se existe alguma regra para utilizar o peso cubico
+		if ($formaDeEntrega->tipo_calc_peso === 3 && $medidas->peso_cubico > $medidas->peso) {
+			$medidas->peso = $medidas->peso_cubico;
+		} elseif ($formaDeEntrega->tipo_calc_peso === 2) {
+			$medidas->peso = $medidas->peso_cubico;
+		}
+		//TODO: Verifica se considera a embalagem no calculo
+		if ($formaDeEntrega->verifica_embalagem) {
+			$medidas = FreteController::calcularMedidasEmbalagem($idLoja, $medidas);
 		}
 		return $medidas;
 	}
