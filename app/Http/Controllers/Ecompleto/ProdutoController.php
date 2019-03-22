@@ -13,9 +13,9 @@ class ProdutoController extends Controller
 	{
 		$medidas = Produto::medidas($idLoja, $idProduto);
 		$medidas->valor_venda_nota = $medidas->valor_venda * $quantidade;
+		$medidas->peso = round($medidas->peso * $quantidade, 4);
 		//TODO: Ao cadastrar uma forma de entrega é possível marcar um checkbox que leva em conta a $quantidade de produtos ao calcular o frete
 		if ($formaDeEntrega->calculo_itens_adicionais) {
-			$medidas->peso = round($medidas->peso * $quantidade, 4);
 			$medidas->altura = round($medidas->altura * $quantidade, 4);
 			$medidas->peso_cubico = round($medidas->largura * $medidas->altura * $medidas->profundidade * $quantidade * $formaDeEntrega->formula_cubado / 1000000, 4);
 			$medidas->volume = round($medidas->largura * $medidas->altura * $medidas->profundidade * $quantidade, 4);

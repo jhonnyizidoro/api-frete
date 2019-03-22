@@ -80,18 +80,18 @@ class FreteController extends Controller
 				$valoresFrete = Self::buscarRegraFretePorCep($idLoja, $cep, $formaDeEntrega);
 			} elseif (!$formaDeEntrega->calculo_online) { //TABELA DE FRETE
 				$valoresFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidas);
+			} elseif ($formaDeEntrega->id_transportadora === 1) {
+				$valoresFrete = CorreiosController::calcularFrete($idLoja, $cep, $enderecoLoja->cep, $formaDeEntrega->id_servicorastreamento, $medidas, $informacoesPrivadasLoja);
 			} else { //INTEGRAÇÃO
 
-				//TODO: Busca as tabelas de frete para fazer o calculo da integração (Correios não precisa de tabela de frete)
+				//TODO: Busca as tabelas de frete para fazer o calculo da integração
 				$regraDeFrete = Self::buscarRegraFrete($idLoja, $faixaCep, $formaDeEntrega, $medidas);
-				if (!$regraDeFrete && $formaDeEntrega->id_transportadora !== 1) {
+				if (!$regraDeFrete) {
 					continue;
 				}
 
 				//TODO: Faz a consulta nas APIs das transportadoras
-				if ($formaDeEntrega->id_transportadora === 1) {
-					$valoresFrete = CorreiosController::calcularFrete($idLoja, $cep, $enderecoLoja->cep, $formaDeEntrega->id_servicorastreamento, $medidas, $informacoesPrivadasLoja);
-				} elseif ($formaDeEntrega->codigo_integrador === 413) {
+				if ($formaDeEntrega->codigo_integrador === 413) {
 					$valoresFrete = JamefController::calcularFrete($cep, $enderecoLoja, $formaDeEntrega, $medidas, $informacoesPrivadasLoja);
 				} elseif ($formaDeEntrega->id_transportadora === 27) {
 					$valoresFrete = JadlogController::calcularFrete($idLoja, $cep, $medidas, $formaDeEntrega, $informacoesPrivadasLoja);
@@ -102,8 +102,10 @@ class FreteController extends Controller
 				}
 
 				//TODO: Verifica se existe alguma valor ou prazo adicional na regra de frete
-				$valoresFrete['valor_frete'] += Self::calcularValorAdicional($formaDeEntrega, $regraDeFrete['valor_frete']);
-				$valoresFrete['valor_frete'] += $regraDeFrete['valor_frete'];
+				if ($valoresFrete) {
+					$valoresFrete['valor_frete'] += Self::calcularValorAdicional($formaDeEntrega, $regraDeFrete['valor_frete']);
+					$valoresFrete['valor_frete'] += $regraDeFrete['valor_frete'];
+				}
 			}
 
 			//TODO: Adiciona o novo valor calculado no array de retorno
@@ -118,7 +120,7 @@ class FreteController extends Controller
 			$frete['prazo_entrega'] += Self::calcularDiasAdicionaisFeriado($idLoja, $frete['prazo_entrega']);
 		
 			//TODO: Somando valores adicionais e verificando se o valor de frete repeita o frete mínimo da loja
-			$valoresFrete['valor_frete'] += Self::calcularValorAdicional($formaDeEntrega, $valoresFrete['valor_frete']);
+			$frete['valor_frete'] += Self::calcularValorAdicional($formaDeEntrega, $frete['valor_frete']);
 			if ($informacoesPrivadasLoja->sobretaxa_frete > 0) {
 				$frete['valor_frete'] *= $informacoesPrivadasLoja->sobretaxa_frete;
 			}
