@@ -49,10 +49,15 @@ class FreteController extends Controller
 				continue;
 			}
 
-			//TODO: Busca informações do produto ou do carrinho
+			//TODO: Busca promoções (frete grátis e regras de promoções)
 			$freteGratis = $__CONTROLLER::buscarFreteGratis($idLoja, $idObjeto, $formaDeEntrega->id);
 			$promocaoFrete = $__CONTROLLER::buscarPromocaoFrete($idLoja, $idObjeto, $formaDeEntrega->id, $faixaCep, $quantidade);
+			
+			//TODO: Busca medidas e embalagem
 			$medidas = $__CONTROLLER::buscarMedidas($idLoja, $idObjeto, $formaDeEntrega, $quantidade);
+			$embalagem = Self::calcularMedidasEmbalagem($idLoja, $medidas, $formaDeEntrega);
+			$medidas = $embalagem['medidas'];
+
 			//TODO: Criando o objeto de retorno
 			$frete = [
 				'id' => $formaDeEntrega->id,
@@ -120,6 +125,7 @@ class FreteController extends Controller
 		
 			//TODO: Somando valores adicionais e verificando se o valor de frete repeita o frete mínimo da loja
 			$frete['valor_frete'] += Self::calcularValorAdicional($formaDeEntrega, $frete['valor_frete']);
+			$frete['valor_frete'] += $embalagem['custo_unitario'];
 			if ($informacoesPrivadasLoja->sobretaxa_frete > 0) {
 				$frete['valor_frete'] *= $informacoesPrivadasLoja->sobretaxa_frete;
 			}
@@ -204,16 +210,23 @@ class FreteController extends Controller
 		return Frete::cepBloqueado($idLoja, $cep);
 	}
 
-	public static function calcularMedidasEmbalagem(int $idLoja, object $medidas)
+	public static function calcularMedidasEmbalagem(int $idLoja, object $medidas, object $formaDeEntrega)
 	{
-		$embalagem = Frete::buscarEmbalagemPorVolume($idLoja, $medidas->volume);
-		if ($embalagem) {
-			$medidas->largura = $embalagem->largura;
-			$medidas->profundidade = $embalagem->profundidade;
-			$medidas->altura = $embalagem->altura;
-			$medidas->volume = $embalagem->volume;
-			$medidas->peso += $embalagem->peso;
+		$custoUnitario = 0;
+		if ($formaDeEntrega->verifica_embalagem) {
+			$embalagem = Frete::buscarEmbalagemPorVolume($idLoja, $medidas->volume);
+			if ($embalagem) {
+				$medidas->largura = $embalagem->largura;
+				$medidas->profundidade = $embalagem->profundidade;
+				$medidas->altura = $embalagem->altura;
+				$medidas->volume = $embalagem->volume;
+				$medidas->peso += $embalagem->peso;
+				$custoUnitario = $embalagem->custo_unitario;
+			}
 		}
-		return $medidas;
+		return [
+			'medidas' => $medidas,
+			'custo_unitario' => $custoUnitario
+		];
 	}
 }

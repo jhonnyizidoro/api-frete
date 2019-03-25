@@ -4,9 +4,6 @@ namespace App\Http\Controllers\Ecompleto;
 
 use App\Http\Controllers\Controller;
 
-//Importação de Controlles
-use App\Http\Controllers\Ecompleto\FreteController;
-
 //Importação de Models
 use App\Models\Ecompleto\Produto;
 
@@ -35,10 +32,6 @@ class ProdutoController extends Controller
 			$medidas->peso = $medidas->peso_cubico;
 		} elseif ($formaDeEntrega->tipo_calc_peso === 2) {
 			$medidas->peso = $medidas->peso_cubico;
-		}
-		//TODO: Verifica se considera a embalagem no calculo
-		if ($formaDeEntrega->verifica_embalagem) {
-			$medidas = FreteController::calcularMedidasEmbalagem($idLoja, $medidas);
 		}
 		return $medidas;
 	}

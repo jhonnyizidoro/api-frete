@@ -64,8 +64,9 @@ if (!function_exists('standardizeFloat'))
 }
 
 /**
-* @param value: valor em string ou float que será convertido
-* TODO: recebe um valor no formato local e retorna no formato padrão. Exemplo: '1.000,00' e retorna 1000.00
+* @param array: array de objetos
+* @param property: nome da propriedade buscada
+* TODO: retorna o objeto com a maior propriedade no array passado
 */
 if (!function_exists('getHigherPropertyItem'))
 {
